@@ -146,10 +146,11 @@ async function updateOrderStatus(orderId, newStatus, button) {
     button.disabled = true;
     button.textContent = 'Зберігаю...';
 
-    const { error } = await client
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', orderId);
+    const { error } = await client.rpc('admin_update_order_status', {
+        p_order_id: String(orderId),
+        p_status: newStatus,
+        p_pin: ADMIN_PIN,
+    });
 
     button.disabled = false;
     button.textContent = 'Зберегти';
