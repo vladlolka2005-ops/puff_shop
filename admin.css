@@ -2,6 +2,10 @@
     padding: 0;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 .admin-login {
     min-height: 100vh;
     display: flex;

@@ -4,7 +4,7 @@ const S_URL = 'https://bsiavngtycpetiiikmxd.supabase.co';
 const S_KEY = 'sb_publishable_5WlTFr_cduyplbY4BS2w2w_cevKpWmW';
 const ADMIN_PIN = '2580';
 
-const supabaseClient = supabase.createClient(S_URL, S_KEY);
+let supabaseClient = null;
 
 const statusLabels = {
     pending: 'В процесi',
@@ -74,6 +74,19 @@ function setLastUpdated() {
 }
 
 
+function getSupabaseClient() {
+    if (supabaseClient) return supabaseClient;
+
+    if (!window.supabase) {
+        alert('Supabase ще не завантажився. Оновіть сторінку і спробуйте ще раз.');
+        return null;
+    }
+
+    supabaseClient = window.supabase.createClient(S_URL, S_KEY);
+    return supabaseClient;
+}
+
+
 // ================= AUTH =================
 
 function showAdmin() {
@@ -101,10 +114,13 @@ function login() {
 async function loadOrders() {
     if (isLoading) return;
 
+    const client = getSupabaseClient();
+    if (!client) return;
+
     isLoading = true;
     document.getElementById('refresh-btn').disabled = true;
 
-    const { data, error } = await supabaseClient
+    const { data, error } = await client
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
@@ -124,10 +140,13 @@ async function loadOrders() {
 }
 
 async function updateOrderStatus(orderId, newStatus, button) {
+    const client = getSupabaseClient();
+    if (!client) return;
+
     button.disabled = true;
     button.textContent = 'Зберігаю...';
 
-    const { error } = await supabaseClient
+    const { error } = await client
         .from('orders')
         .update({ status: newStatus })
         .eq('id', orderId);
