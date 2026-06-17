@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUFF Shop Admin</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="admin.js?v=1" defer></script>
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+    <main id="login-screen" class="admin-login">
+        <section class="admin-login-panel">
+            <h1>PUFF Admin</h1>
+            <p>Введіть PIN для керування замовленнями</p>
+            <input id="admin-pin" class="input-field" type="password" inputmode="numeric" placeholder="PIN">
+            <button id="login-btn" class="main-btn">Увійти</button>
+            <div id="login-error" class="admin-error"></div>
+        </section>
+    </main>
+
+    <main id="admin-app" class="admin-shell" hidden>
+        <header class="admin-topbar">
+            <div>
+                <h1>Замовлення</h1>
+                <div id="last-updated" class="admin-muted">Ще не оновлено</div>
+            </div>
+            <button id="refresh-btn" class="admin-icon-btn" title="Оновити">↻</button>
+        </header>
+
+        <section class="admin-toolbar">
+            <input id="search-input" class="input-field" type="search" placeholder="Пошук: номер, телефон, Telegram, ім'я">
+            <select id="status-filter" class="input-field">
+                <option value="all">Всі статуси</option>
+                <option value="pending">В процесi</option>
+                <option value="confirmed">Підтверджено</option>
+                <option value="completed">Виконано</option>
+                <option value="rejected">Вiдхилено</option>
+            </select>
+        </section>
+
+        <section class="admin-summary" aria-label="Підсумок замовлень">
+            <div>
+                <span id="count-all">0</span>
+                <small>Всього</small>
+            </div>
+            <div>
+                <span id="count-pending">0</span>
+                <small>В процесi</small>
+            </div>
+            <div>
+                <span id="count-confirmed">0</span>
+                <small>Підтверджено</small>
+            </div>
+            <div>
+                <span id="count-completed">0</span>
+                <small>Виконано</small>
+            </div>
+        </section>
+
+        <div id="orders-list" class="admin-orders"></div>
+        <div id="empty-state" class="admin-empty" hidden>Замовлень не знайдено</div>
+    </main>
+</body>
+</html>
