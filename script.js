@@ -689,30 +689,6 @@ async function cancelOrder(orderId) {
             return;
         }
 
-        for (const item of order.items) {
-            const { data: product, error: getError } = await supabaseClient
-                .from('Products')
-                .select('stock')
-                .eq('id', item.id)
-                .single();
-
-            if (getError) throw getError;
-
-            const newStock = product.stock + item.qty;
-
-            const { error: updateError } = await supabaseClient
-                .from('Products')
-                .update({ stock: newStock })
-                .eq('id', item.id);
-
-            if (updateError) throw updateError;
-
-            const localProduct = productsData.find(p => Number(p.id) == Number(item.id));
-            if (localProduct) {
-                localProduct.stock = newStock;
-            }
-        }
-
         const { error: updateOrderError } = await supabaseClient
             .from('orders')
             .update({ status: 'rejected' })
@@ -720,8 +696,7 @@ async function cancelOrder(orderId) {
 
         if (updateOrderError) throw updateOrderError;
 
-        validateCart();
-        render();
+        await load();
         updateFooter();
         loadHistory();
 
