@@ -143,6 +143,8 @@ async function updateOrderStatus(orderId, newStatus, button) {
     const client = getSupabaseClient();
     if (!client) return;
 
+    const order = orders.find(item => String(item.id) === String(orderId));
+
     button.disabled = true;
     button.textContent = 'Зберігаю...';
 
@@ -161,7 +163,30 @@ async function updateOrderStatus(orderId, newStatus, button) {
         return;
     }
 
+    await notifyCustomerStatusChange(order, newStatus);
     await loadOrders();
+}
+
+async function notifyCustomerStatusChange(order, newStatus) {
+    if (!order?.telegram_id) return;
+
+    const response = await fetch('/api/notify-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            pin: ADMIN_PIN,
+            chatId: order.telegram_id,
+            status: newStatus,
+            orderNumber: formatOrderNumber(order),
+        }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        console.error('Telegram notification error:', result);
+        alert(`Статус змінено, але повідомлення покупцю не відправлено:\n${result.error || response.statusText}`);
+    }
 }
 
 
