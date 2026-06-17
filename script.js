@@ -11,6 +11,7 @@ let currentCategory = 'Рідина';
 
 let cart = {};
 let favorites = JSON.parse(localStorage.getItem('puff_favs')) || [];
+let isSubmittingOrder = false;
 
 
 // ================= CART STORAGE =================
@@ -335,6 +336,8 @@ function openCheckout() {
 }
 
 async function submitOrder() {
+    if (isSubmittingOrder) return;
+
     const name = document.getElementById('order-name').value.trim();
     const phone = document.getElementById('order-phone').value.trim();
     const delivery = document.getElementById('order-delivery').value;
@@ -350,6 +353,10 @@ async function submitOrder() {
 
     if (!name || !/^\d{9}$/.test(cleanPhone)) {
         return alert('Перевірте контактні дані! Номер повинен містити 9 цифр (наприклад: 931234567)');
+    }
+
+    if (delivery === 'nova_poshta' && (!city || !warehouse)) {
+        return alert('Вкажіть місто та відділення Нової Пошти!');
     }
 
     const items = Object.values(cart);
@@ -369,6 +376,8 @@ async function submitOrder() {
     }));
 
     // Инсертим заказ напрямую в английские названия полей
+    isSubmittingOrder = true;
+
     const { error: orderError } = await supabaseClient
         .from('orders')
         .insert([{
@@ -387,8 +396,17 @@ async function submitOrder() {
         }]);
 
     if (orderError) {
+        isSubmittingOrder = false;
         console.error('Ошибка сохранения заказа:', orderError);
-        alert('Помилка збереження замовлення!');
+
+        const errorText = [
+            orderError.message,
+            orderError.details,
+            orderError.hint,
+            orderError.code ? `Код: ${orderError.code}` : '',
+        ].filter(Boolean).join('\n');
+
+        alert(`Помилка збереження замовлення!\n${errorText}`);
         return;
     }
 
@@ -405,6 +423,7 @@ async function submitOrder() {
     saveCart();
     updateFooter();
     render();
+    isSubmittingOrder = false;
 }
 
 
