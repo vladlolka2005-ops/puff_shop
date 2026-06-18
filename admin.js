@@ -320,6 +320,16 @@ function renderOrderCard(order) {
                 <div class="admin-field">Коментар<strong>${escapeHtml(order.comment || '—')}</strong></div>
             </div>
 
+            <div class="admin-contact admin-contact-top">
+                <div class="admin-contact-actions">
+                    ${telegramLink
+                        ? `<a class="admin-contact-link" href="${escapeHtml(telegramLink)}" target="_blank" rel="noopener noreferrer">Відкрити Telegram</a>`
+                        : '<span class="admin-muted">Telegram username не вказано</span>'}
+                </div>
+                <textarea class="input-field comment-field admin-message-input" placeholder="Повідомлення покупцю"></textarea>
+                <button class="admin-send-btn" data-order-id="${escapeHtml(order.id)}" onclick="sendCustomerMessage(this)">Відправити</button>
+            </div>
+
             <div class="admin-items">
                 ${itemsHtml || '<div class="admin-muted">Товари не вказані</div>'}
             </div>

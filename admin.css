@@ -190,6 +190,10 @@
     margin-bottom: 12px;
 }
 
+.admin-items + .admin-contact {
+    display: none;
+}
+
 .admin-contact-actions {
     min-height: 24px;
     margin-bottom: 8px;
