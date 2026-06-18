@@ -184,6 +184,44 @@
     gap: 8px;
 }
 
+.admin-contact {
+    border-top: 1px solid #455a64;
+    padding-top: 10px;
+    margin-bottom: 12px;
+}
+
+.admin-contact-actions {
+    min-height: 24px;
+    margin-bottom: 8px;
+}
+
+.admin-contact-link {
+    color: var(--tg-blue);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.admin-message-input {
+    min-height: 72px;
+    margin-bottom: 8px;
+}
+
+.admin-send-btn {
+    width: 100%;
+    background: var(--tg-green);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 11px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.admin-send-btn:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
 .admin-status-select {
     min-width: 0;
 }

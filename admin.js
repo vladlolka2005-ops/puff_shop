@@ -189,6 +189,53 @@ async function notifyCustomerStatusChange(order, newStatus) {
     }
 }
 
+async function sendCustomerMessage(button) {
+    const orderId = button.dataset.orderId;
+    const order = orders.find(item => String(item.id) === String(orderId));
+    const panel = button.closest('.admin-contact');
+    const textarea = panel.querySelector('.admin-message-input');
+    const message = textarea.value.trim();
+
+    if (!message) {
+        alert('Введіть повідомлення для покупця');
+        return;
+    }
+
+    if (!order?.telegram_id) {
+        alert('У цього замовлення немає Telegram ID для відправки повідомлення');
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Відправляю...';
+
+    const response = await fetch('/api/notify-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            pin: ADMIN_PIN,
+            chatId: order.telegram_id,
+            orderNumber: formatOrderNumber(order),
+            message,
+            type: 'custom',
+        }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    button.disabled = false;
+    button.textContent = 'Відправити';
+
+    if (!response.ok) {
+        console.error('Telegram message error:', result);
+        alert(`Не вдалося відправити повідомлення:\n${result.error || response.statusText}`);
+        return;
+    }
+
+    textarea.value = '';
+    alert('Повідомлення покупцю відправлено');
+}
+
 
 // ================= RENDER =================
 
@@ -240,6 +287,10 @@ function renderOrderCard(order) {
         ? `Нова Пошта, ${order.city || 'місто не вказано'}, відд. ${order.warehouse || 'не вказано'}`
         : order.delivery || '—';
 
+    const telegramLink = order.telegram
+        ? `https://t.me/${String(order.telegram).replace('@', '')}`
+        : '';
+
     const itemsHtml = items.map(item => `
         <div class="admin-item">
             <span>${escapeHtml(item.name || `Товар #${item.id}`)}</span>
@@ -271,6 +322,16 @@ function renderOrderCard(order) {
 
             <div class="admin-items">
                 ${itemsHtml || '<div class="admin-muted">Товари не вказані</div>'}
+            </div>
+
+            <div class="admin-contact">
+                <div class="admin-contact-actions">
+                    ${telegramLink
+                        ? `<a class="admin-contact-link" href="${escapeHtml(telegramLink)}" target="_blank" rel="noopener noreferrer">Відкрити Telegram</a>`
+                        : '<span class="admin-muted">Telegram username не вказано</span>'}
+                </div>
+                <textarea class="input-field comment-field admin-message-input" placeholder="Повідомлення покупцю"></textarea>
+                <button class="admin-send-btn" data-order-id="${escapeHtml(order.id)}" onclick="sendCustomerMessage(this)">Відправити</button>
             </div>
 
             <div class="admin-actions">

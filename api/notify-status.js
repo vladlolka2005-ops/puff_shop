@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
     }
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const { pin, chatId, status, orderNumber } = body;
+    const { pin, chatId, status, orderNumber, message, type } = body;
 
     if (pin !== adminPin) {
         res.status(403).json({ error: 'Invalid PIN' });
@@ -39,18 +39,31 @@ module.exports = async function handler(req, res) {
         return;
     }
 
-    if (!STATUS_LABELS[status]) {
+    if (type !== 'custom' && !STATUS_LABELS[status]) {
         res.status(400).json({ error: 'Invalid status' });
         return;
     }
 
-    const text = [
-        `Статус замовлення №${orderNumber || '-'} змінено.`,
-        `Новий статус: ${STATUS_LABELS[status]}.`,
-        STATUS_MESSAGES[status],
-        '',
-        'З питань звертайтеся до менеджера: @nnpuff',
-    ].join('\n');
+    if (type === 'custom' && !String(message || '').trim()) {
+        res.status(400).json({ error: 'Message is required' });
+        return;
+    }
+
+    const text = type === 'custom'
+        ? [
+            `Повідомлення щодо замовлення №${orderNumber || '-'}.`,
+            '',
+            String(message || '').trim(),
+            '',
+            'З питань звертайтеся до менеджера: @nnpuff',
+        ].join('\n')
+        : [
+            `Статус замовлення №${orderNumber || '-'} змінено.`,
+            `Новий статус: ${STATUS_LABELS[status]}.`,
+            STATUS_MESSAGES[status],
+            '',
+            'З питань звертайтеся до менеджера: @nnpuff',
+        ].join('\n');
 
     const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
