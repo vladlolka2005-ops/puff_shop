@@ -810,7 +810,9 @@ function renderProductCard(p, { isFavorite = false } = {}) {
     `;
 }
 
-/* function renderStock(stock) {
+// ================= HISTORY =================
+
+function renderStock(stock) {
     return `
         <div class="stock ${stock > 0 ? 'in' : 'out'}">
             ${stock > 0
@@ -818,10 +820,7 @@ function renderProductCard(p, { isFavorite = false } = {}) {
                 : 'Немає в наявності'}
         </div>
     `;
-} */
-
-
-// ================= HISTORY =================
+}
 
 async function loadHistory() {
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
