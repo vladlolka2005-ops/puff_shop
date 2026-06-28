@@ -810,15 +810,15 @@ function renderProductCard(p, { isFavorite = false } = {}) {
     `;
 }
 
-function renderStock(stock) {
+/* function renderStock(stock) {
     return `
         <div class="stock ${stock > 0 ? 'in' : 'out'}">
             ${stock > 0
-                //? `В наявності: ${stock} шт.`
+                ? `В наявності: ${stock} шт.`
                 : 'Немає в наявності'}
         </div>
     `;
-}
+} */
 
 
 // ================= HISTORY =================
