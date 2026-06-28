@@ -169,6 +169,11 @@ select.input-field {
     font-size: 1.1em;
 }
 
+.flavor-count {
+    color: #b2bcc4;
+    font-size: 12px;
+}
+
 .buy-btn {
     margin-top: 6px;
 }
@@ -403,6 +408,92 @@ select.input-field {
 .fav-btn.active {
     color: #ff5252;
     background: white;
+}
+
+
+/* ================== PRODUCT DETAIL ================== */
+
+.product-group-card {
+    cursor: pointer;
+}
+
+.product-detail {
+    position: relative;
+}
+
+.detail-fav {
+    top: 22px;
+    right: 22px;
+}
+
+.detail-image-wrap {
+    background: #0f151b;
+    border: 1px solid #455a64;
+    border-radius: 10px;
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.detail-image-wrap img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.detail-info {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.detail-info .name {
+    display: block;
+    -webkit-line-clamp: unset;
+    color: white;
+    font-size: 16px;
+    text-align: left;
+}
+
+.flavor-section {
+    margin-top: 20px;
+}
+
+.flavor-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.flavor-btn {
+    background: transparent;
+    color: #b2bcc4;
+    border: 1px solid #455a64;
+    border-radius: 8px;
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.flavor-btn.active {
+    background: var(--tg-blue);
+    border-color: var(--tg-blue);
+    color: white;
+}
+
+.flavor-btn[data-empty="true"] {
+    opacity: 0.45;
+}
+
+.detail-buy {
+    margin-top: 20px;
+    min-height: 46px;
 }
 
 

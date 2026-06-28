@@ -7,6 +7,7 @@ const supabaseClient = supabase.createClient(S_URL, S_KEY);
 
 let productsData = [];
 let currentSort = 'promo';
+let selectedFlavorByGroup = {};
 let currentCategory = 'Рідина';
 
 let cart = {};
@@ -56,17 +57,95 @@ async function load() {
 }
 
 
-// ================= RENDER PRODUCTS =================
+// ================= PRODUCT GROUPS / FLAVORS =================
 
-function render() {
-    const grid = document.getElementById('products-grid');
-    if (!grid) return;
+function normalizeText(value) {
+    return String(value || '').trim().replace(/\s+/g, ' ');
+}
 
-    let filtered = productsData.filter(p =>
-        currentCategory === 'Рідина' || p.category === currentCategory
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}
+
+function escapeAttr(value) {
+    return escapeHtml(value).replaceAll('\n', ' ');
+}
+
+function encodeClickValue(value) {
+    return encodeURIComponent(String(value ?? ''));
+}
+
+function decodeClickValue(value) {
+    return decodeURIComponent(String(value ?? ''));
+}
+
+function getProductGroupName(product) {
+    const explicitGroup = normalizeText(
+        product.group_name ||
+        product.group ||
+        product.base_name ||
+        product.product_name ||
+        product.line ||
+        product.series ||
+        product.model
     );
 
-    filtered.sort((a, b) => {
+    if (explicitGroup) return explicitGroup;
+
+    const name = normalizeText(product.name);
+    const separators = [' - ', ' — ', ' – ', ' | '];
+    const separator = separators.find(item => name.includes(item));
+
+    if (separator) {
+        return normalizeText(name.split(separator)[0]);
+    }
+
+    return name;
+}
+
+function getProductFlavor(product, groupName = '') {
+    const explicitFlavor = normalizeText(
+        product.flavor ||
+        product.Flavor ||
+        product.taste ||
+        product.Taste ||
+        product.smak ||
+        product.aroma
+    );
+
+    if (explicitFlavor) return explicitFlavor;
+
+    const name = normalizeText(product.name);
+    const group = normalizeText(groupName);
+
+    if (group && name.toLowerCase().startsWith(group.toLowerCase())) {
+        const flavor = normalizeText(name.slice(group.length));
+        if (flavor) return flavor.replace(/^[-—–|:]+/, '').trim();
+    }
+
+    return name;
+}
+
+function getProductGroupKey(product) {
+    const explicitKey = normalizeText(
+        product.group_id ||
+        product.group_key ||
+        product.parent_id ||
+        product.slug
+    );
+
+    if (explicitKey) return explicitKey;
+
+    return `${normalizeText(product.category)}::${getProductGroupName(product).toLowerCase()}`;
+}
+
+function sortProductsList(items) {
+    return [...items].sort((a, b) => {
         if (b.stock !== a.stock) {
             return b.stock - a.stock;
         }
@@ -79,11 +158,153 @@ function render() {
 
         return 0;
     });
+}
 
-    grid.innerHTML = filtered.map(p => {
-        const isFav = favorites.includes(Number(p.id));
-        return renderProductCard(p, { isFavorite: isFav });
+function getProductGroups(products) {
+    const groups = {};
+
+    products.forEach(product => {
+        const key = getProductGroupKey(product);
+        if (!groups[key]) {
+            groups[key] = {
+                key,
+                name: getProductGroupName(product),
+                items: [],
+            };
+        }
+
+        groups[key].items.push(product);
+    });
+
+    return Object.values(groups).map(group => ({
+        ...group,
+        items: sortProductsList(group.items),
+    }));
+}
+
+function getSelectedVariant(group) {
+    const selectedId = selectedFlavorByGroup[group.key];
+    const selected = group.items.find(item => Number(item.id) === Number(selectedId));
+    return selected || group.items.find(item => Number(item.stock) > 0) || group.items[0];
+}
+
+function openProductGroup(groupKey) {
+    const group = getProductGroups(productsData).find(item => item.key === groupKey);
+    if (!group) return;
+
+    if (!selectedFlavorByGroup[group.key]) {
+        selectedFlavorByGroup[group.key] = getSelectedVariant(group).id;
+    }
+
+    renderProductGroupModal(group);
+}
+
+function openProductGroupEncoded(encodedGroupKey) {
+    openProductGroup(decodeClickValue(encodedGroupKey));
+}
+
+function selectProductFlavor(groupKey, productId) {
+    const group = getProductGroups(productsData).find(item => item.key === groupKey);
+    if (!group) return;
+
+    selectedFlavorByGroup[groupKey] = Number(productId);
+    renderProductGroupModal(group);
+
+    if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.HapticFeedback.selectionChanged();
+    }
+}
+
+function selectProductFlavorEncoded(encodedGroupKey, productId) {
+    selectProductFlavor(decodeClickValue(encodedGroupKey), productId);
+}
+
+function closeProductGroup() {
+    const modal = document.getElementById('product-group-screen');
+    if (modal) modal.style.display = 'none';
+}
+
+function renderProductGroupModal(group) {
+    let modal = document.getElementById('product-group-screen');
+
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'product-group-screen';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+
+    const selected = getSelectedVariant(group);
+    const isFav = favorites.includes(Number(selected.id));
+    const flavorButtons = group.items.map(item => {
+        const flavor = getProductFlavor(item, group.name);
+        const isActive = Number(item.id) === Number(selected.id);
+
+        return `
+            <button class="flavor-btn ${isActive ? 'active' : ''}"
+                onclick="selectProductFlavorEncoded('${encodeClickValue(group.key)}', ${item.id})"
+                ${item.stock <= 0 ? 'data-empty="true"' : ''}>
+                ${escapeHtml(flavor)}
+            </button>
+        `;
     }).join('');
+
+    modal.innerHTML = `
+        <div class="modal-content product-detail">
+            <div class="modal-header">
+                <button class="back-btn" onclick="closeProductGroup()">‹</button>
+                ${escapeHtml(group.name)}
+            </div>
+
+            <button class="fav-btn detail-fav ${isFav ? 'active' : ''}"
+                onclick="toggleFav(${selected.id})">
+                ${isFav ? '❤' : '♡'}
+            </button>
+
+            <div class="detail-image-wrap">
+                <img src="${escapeAttr(selected.image_url || '')}"
+                     onclick="openImageModal('${escapeAttr(selected.image_url || '')}')"
+                     style="cursor:pointer;">
+            </div>
+
+            <div class="detail-info">
+                ${renderStock(selected.stock)}
+                <div class="price">${selected.price} ₴</div>
+                <div class="name">${escapeHtml(selected.name)}</div>
+            </div>
+
+            <div class="flavor-section">
+                <div class="label">Смаки</div>
+                <div class="flavor-grid">
+                    ${flavorButtons}
+                </div>
+            </div>
+
+            <button class="buy-btn detail-buy"
+                onclick="handleBuy(this, ${selected.id})"
+                ${selected.stock <= 0 ? 'disabled style="opacity:0.5"' : ''}>
+                ${selected.stock > 0 ? 'Купити' : 'Немає'}
+            </button>
+        </div>
+    `;
+
+    modal.style.display = 'block';
+}
+
+
+// ================= RENDER PRODUCTS =================
+
+function render() {
+    const grid = document.getElementById('products-grid');
+    if (!grid) return;
+
+    let filtered = productsData.filter(p =>
+        currentCategory === 'Рідина' || p.category === currentCategory
+    );
+
+    const groups = getProductGroups(sortProductsList(filtered));
+
+    grid.innerHTML = groups.map(group => renderProductGroupCard(group)).join('');
 
     updateFooter();
 }
@@ -231,6 +452,13 @@ function toggleFav(id) {
     localStorage.setItem('puff_favs', JSON.stringify(favorites));
 
     render();
+
+    const detailModal = document.getElementById('product-group-screen');
+    if (detailModal?.style.display === 'block') {
+        const group = getProductGroups(productsData)
+            .find(item => item.items.some(product => Number(product.id) === numericId));
+        if (group) renderProductGroupModal(group);
+    }
 
     if (document.getElementById('favorites-screen')?.style.display === 'block') {
         openFavorites();
@@ -480,15 +708,17 @@ function flyToCart(imgElement, targetBtnId = 'cart-footer') {
 }
 
 function handleBuy(btn, id) {
-    const card = btn.closest('.card');
-    const img = card.querySelector('img');
+    const card = btn.closest('.card') || btn.closest('.product-detail');
+    const img = card?.querySelector('img');
 
     const isFavorites = document.getElementById('favorites-screen')?.style.display === 'block';
 
-    if (isFavorites) {
-        flyToCart(img, 'fav-cart-footer');
-    } else {
-        flyToCart(img, 'cart-footer');
+    if (img) {
+        if (isFavorites) {
+            flyToCart(img, 'fav-cart-footer');
+        } else {
+            flyToCart(img, 'cart-footer');
+        }
     }
 
     addToCart(Number(id));
@@ -496,6 +726,41 @@ function handleBuy(btn, id) {
 
 
 // ================= RENDER HELPERS =================
+
+function renderProductGroupCard(group) {
+    const selected = getSelectedVariant(group);
+    const inStock = group.items.reduce((sum, item) => sum + Number(item.stock || 0), 0);
+    const prices = group.items.map(item => Number(item.price || 0)).filter(price => price > 0);
+    const minPrice = prices.length ? Math.min(...prices) : Number(selected.price || 0);
+    const isFav = group.items.some(item => favorites.includes(Number(item.id)));
+    const flavorText = group.items.length > 1
+        ? `${group.items.length} смаків`
+        : getProductFlavor(selected, group.name);
+
+    return `
+        <div class="card product-group-card" onclick="openProductGroupEncoded('${encodeClickValue(group.key)}')">
+            <button class="fav-btn ${isFav ? 'active' : ''}"
+                onclick="event.stopPropagation(); toggleFav(${selected.id})">
+                ${isFav ? '❤' : '♡'}
+            </button>
+
+            <div class="img-wrap">
+                <img src="${escapeAttr(selected.image_url || '')}"
+                     style="cursor:pointer;">
+            </div>
+
+            <div class="info">
+                ${renderStock(inStock)}
+                <div class="price">від ${minPrice} ₴</div>
+                <div class="name">${escapeHtml(group.name)}</div>
+                <div class="flavor-count">${escapeHtml(flavorText)}</div>
+                <button class="buy-btn" onclick="event.stopPropagation(); openProductGroupEncoded('${encodeClickValue(group.key)}')">
+                    Вибрати смак
+                </button>
+            </div>
+        </div>
+    `;
+}
 
 function renderProductCard(p, { isFavorite = false } = {}) {
     return `
