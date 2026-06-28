@@ -8,7 +8,13 @@ const supabaseClient = supabase.createClient(S_URL, S_KEY);
 let productsData = [];
 let currentSort = 'promo';
 let selectedFlavorByGroup = {};
-let currentCategory = 'Рідина';
+let currentCategory = 'liquid';
+
+const CATEGORY_VALUES = {
+    liquid: ['Рідина'],
+    pods: ['POD-Системи'],
+    cartridges: ['Картриджі'],
+};
 
 let cart = {};
 let favorites = JSON.parse(localStorage.getItem('puff_favs')) || [];
@@ -61,6 +67,19 @@ async function load() {
 
 function normalizeText(value) {
     return String(value || '').trim().replace(/\s+/g, ' ');
+}
+
+function normalizeCategory(value) {
+    return normalizeText(value).toLowerCase();
+}
+
+function productMatchesCategory(product) {
+    const allowedValues = CATEGORY_VALUES[currentCategory] || [];
+    const productCategory = normalizeCategory(product.category);
+
+    return allowedValues.some(category =>
+        normalizeCategory(category) === productCategory
+    );
 }
 
 function escapeHtml(value) {
@@ -139,7 +158,9 @@ function getProductGroupKey(product) {
         product.slug
     );
 
-    if (explicitKey) return explicitKey;
+    if (explicitKey) {
+        return `${normalizeText(product.category)}::${explicitKey}`;
+    }
 
     return `${normalizeText(product.category)}::${getProductGroupName(product).toLowerCase()}`;
 }
@@ -298,10 +319,7 @@ function render() {
     const grid = document.getElementById('products-grid');
     if (!grid) return;
 
-    let filtered = productsData.filter(p =>
-        currentCategory === 'Рідина' || p.category === currentCategory
-    );
-
+    let filtered = productsData.filter(productMatchesCategory);
     const groups = getProductGroups(sortProductsList(filtered));
 
     grid.innerHTML = groups.map(group => renderProductGroupCard(group)).join('');
@@ -796,7 +814,7 @@ function renderStock(stock) {
     return `
         <div class="stock ${stock > 0 ? 'in' : 'out'}">
             ${stock > 0
-                ? `В наявності: ${stock} шт.`
+                //? `В наявності: ${stock} шт.`
                 : 'Немає в наявності'}
         </div>
     `;
