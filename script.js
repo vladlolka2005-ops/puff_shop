@@ -816,7 +816,7 @@ function renderStock(stock) {
     return `
         <div class="stock ${stock > 0 ? 'in' : 'out'}">
             ${stock > 0
-                ? `В наявності: ${stock} шт.`
+                ? 'В наявності'
                 : 'Немає в наявності'}
         </div>
     `;
