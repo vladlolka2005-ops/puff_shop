@@ -39,8 +39,10 @@ function loadCart() {
 }
 
 function removeFromCart(id) {
-    const numericId = Number(id);
-    delete cart[numericId];
+    const itemId = decodeClickValue(id);
+    delete cart[itemId];
+    delete cart[`product-${itemId}`];
+    delete cart[`cartridge-${itemId}`];
     saveCart();
     updateFooter();
     renderCart();
@@ -50,14 +52,39 @@ function removeFromCart(id) {
 // ================= LOAD =================
 
 async function load() {
-    const { data, error } = await supabaseClient.from('Products').select('*');
+    const [
+        { data: products, error: productsError },
+        { data: cartridges, error: cartridgesError },
+    ] = await Promise.all([
+        supabaseClient.from('Products').select('*'),
+        supabaseClient.from('cartridges').select('*'),
+    ]);
 
-    if (error) {
+    const error = productsError;
+    if (productsError) {
         console.error('Ошибка загрузки:', error);
+        console.error('Products loading error:', productsError);
         return;
     }
 
-    productsData = data;
+    if (cartridgesError) {
+        console.error('Cartridges loading error:', cartridgesError);
+    }
+
+    const normalizedProducts = (products || []).map(product => ({
+        ...product,
+        client_id: `product-${product.id}`,
+    }));
+
+    const normalizedCartridges = (cartridges || []).map(cartridge => ({
+        ...cartridge,
+        category: cartridge.category || 'Картриджі',
+        client_id: `cartridge-${cartridge.id}`,
+        source_table: 'cartridges',
+        source_id: cartridge.id,
+    }));
+
+    productsData = [...normalizedProducts, ...normalizedCartridges];
     validateCart();
     render();
 }
@@ -101,6 +128,18 @@ function encodeClickValue(value) {
 
 function decodeClickValue(value) {
     return decodeURIComponent(String(value ?? ''));
+}
+
+function getProductId(product) {
+    return String(product?.client_id ?? product?.id ?? '');
+}
+
+function findProductById(id) {
+    const key = String(id);
+    return productsData.find(product =>
+        getProductId(product) === key ||
+        String(product.id) === key
+    );
 }
 
 function getProductGroupName(product) {
@@ -250,7 +289,7 @@ function getProductGroups(products) {
 
 function getSelectedVariant(group) {
     const selectedId = selectedFlavorByGroup[group.key];
-    const selected = group.items.find(item => Number(item.id) === Number(selectedId));
+    const selected = group.items.find(item => getProductId(item) === String(selectedId));
     return selected || group.items.find(item => Number(item.stock) > 0) || group.items[0];
 }
 
@@ -259,7 +298,7 @@ function openProductGroup(groupKey) {
     if (!group) return;
 
     if (!selectedFlavorByGroup[group.key]) {
-        selectedFlavorByGroup[group.key] = getSelectedVariant(group).id;
+        selectedFlavorByGroup[group.key] = getProductId(getSelectedVariant(group));
     }
 
     renderProductGroupModal(group);
@@ -273,7 +312,7 @@ function selectProductFlavor(groupKey, productId) {
     const group = getProductGroups(productsData).find(item => item.key === groupKey);
     if (!group) return;
 
-    selectedFlavorByGroup[groupKey] = Number(productId);
+    selectedFlavorByGroup[groupKey] = String(productId);
     renderProductGroupModal(group);
 
     if (window.Telegram?.WebApp) {
@@ -282,7 +321,7 @@ function selectProductFlavor(groupKey, productId) {
 }
 
 function selectProductFlavorEncoded(encodedGroupKey, productId) {
-    selectProductFlavor(decodeClickValue(encodedGroupKey), productId);
+    selectProductFlavor(decodeClickValue(encodedGroupKey), decodeClickValue(productId));
 }
 
 function closeProductGroup() {
@@ -301,14 +340,14 @@ function renderProductGroupModal(group) {
     }
 
     const selected = getSelectedVariant(group);
-    const isFav = favorites.includes(Number(selected.id));
+    const isFav = favorites.includes(getProductId(selected));
     const flavorButtons = group.items.map(item => {
         const flavor = getProductOption(item, group.name);
-        const isActive = Number(item.id) === Number(selected.id);
+        const isActive = getProductId(item) === getProductId(selected);
 
         return `
             <button class="flavor-btn ${isActive ? 'active' : ''}"
-                onclick="selectProductFlavorEncoded('${encodeClickValue(group.key)}', ${item.id})"
+                onclick="selectProductFlavorEncoded('${encodeClickValue(group.key)}', '${encodeClickValue(getProductId(item))}')"
                 ${item.stock <= 0 ? 'data-empty="true"' : ''}>
                 ${escapeHtml(flavor)}
             </button>
@@ -323,7 +362,7 @@ function renderProductGroupModal(group) {
             </div>
 
             <button class="fav-btn detail-fav ${isFav ? 'active' : ''}"
-                onclick="toggleFav(${selected.id})">
+                onclick="toggleFav('${encodeClickValue(getProductId(selected))}')">
                 ${isFav ? '❤' : '♡'}
             </button>
 
@@ -347,7 +386,7 @@ function renderProductGroupModal(group) {
             </div>
 
             <button class="buy-btn detail-buy"
-                onclick="handleBuy(this, ${selected.id})"
+                onclick="handleBuy(this, '${encodeClickValue(getProductId(selected))}')"
                 ${selected.stock <= 0 ? 'disabled style="opacity:0.5"' : ''}>
                 ${selected.stock > 0 ? 'Купити' : 'Немає'}
             </button>
@@ -376,21 +415,21 @@ function render() {
 // ================= CART =================
 
 function addToCart(id) {
-    const numericId = Number(id);
-    const product = productsData.find(p => Number(p.id) === numericId);
+    const itemId = decodeClickValue(id);
+    const product = findProductById(itemId);
     if (!product) return;
 
-    const currentQty = cart[numericId]?.qty || 0;
+    const currentQty = cart[itemId]?.qty || 0;
 
     if (Number(currentQty) >= Number(product.stock)) {
         alert('Більше немає в наявності');
         return;
     }
 
-    if (cart[numericId]) {
-        cart[numericId].qty++;
+    if (cart[itemId]) {
+        cart[itemId].qty++;
     } else {
-        cart[numericId] = { ...product, qty: 1 };
+        cart[itemId] = { ...product, qty: 1 };
     }
 
     saveCart();
@@ -402,13 +441,13 @@ function addToCart(id) {
 }
 
 function changeQty(id, delta) {
-    const numericId = Number(id);
-    if (!cart[numericId]) return;
+    const itemId = decodeClickValue(id);
+    if (!cart[itemId]) return;
 
-    const product = productsData.find(p => Number(p.id) === numericId);
+    const product = findProductById(itemId);
     if (!product) return;
 
-    const newQty = cart[numericId].qty + delta;
+    const newQty = cart[itemId].qty + delta;
 
     if (newQty < 1) return;
 
@@ -417,7 +456,7 @@ function changeQty(id, delta) {
         return;
     }
 
-    cart[numericId].qty = newQty;
+    cart[itemId].qty = newQty;
 
     saveCart();
     updateFooter();
@@ -446,7 +485,7 @@ function updateFooter() {
 
 function validateCart() {
     for (let id in cart) {
-        const product = productsData.find(p => Number(p.id) === Number(id));
+        const product = findProductById(id);
         if (!product) continue;
 
         if (cart[id].qty > product.stock) {
@@ -469,6 +508,7 @@ function renderCart() {
 
     for (let id in cart) {
         const item = cart[id];
+        const itemId = getProductId(item);
         total += item.price * item.qty;
 
         html += `
@@ -483,9 +523,9 @@ function renderCart() {
 
                 <div style="display:flex; gap:10px; align-items:center;">
                     <div class="qty-ctrl">
-                        <button class="qty-btn" onclick="changeQty(${item.id}, -1)">-</button>
+                        <button class="qty-btn" onclick="changeQty('${encodeClickValue(itemId)}', -1)">-</button>
                         <span>${item.qty}</span>
-                        <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+                        <button class="qty-btn" onclick="changeQty('${encodeClickValue(itemId)}', 1)">+</button>
                     </div>
 
                     <span onclick="removeFromCart(${item.id})" style="cursor:pointer;">🗑️</span>
@@ -502,12 +542,12 @@ function renderCart() {
 // ================= FAVORITES =================
 
 function toggleFav(id) {
-    const numericId = Number(id);
+    const itemId = decodeClickValue(id);
 
-    const index = favorites.indexOf(numericId);
+    const index = favorites.indexOf(itemId);
 
     if (index === -1) {
-        favorites.push(numericId);
+        favorites.push(itemId);
     } else {
         favorites.splice(index, 1);
     }
@@ -519,7 +559,7 @@ function toggleFav(id) {
     const detailModal = document.getElementById('product-group-screen');
     if (detailModal?.style.display === 'block') {
         const group = getProductGroups(productsData)
-            .find(item => item.items.some(product => Number(product.id) === numericId));
+            .find(item => item.items.some(product => getProductId(product) === itemId));
         if (group) renderProductGroupModal(group);
     }
 
@@ -532,8 +572,8 @@ function openFavorites() {
     document.getElementById('favorites-screen').style.display = 'block';
 
     const favProducts = productsData
-        .filter(p => favorites.includes(Number(p.id)))
-        .map(p => productsData.find(x => Number(x.id) === Number(p.id)) || p);
+        .filter(p => favorites.includes(getProductId(p)))
+        .map(p => productsData.find(x => getProductId(x) === getProductId(p)) || p);
 
     const grid = document.getElementById('favorites-grid');
     const cartContainer = document.getElementById('fav-cart-container');
@@ -771,6 +811,7 @@ function flyToCart(imgElement, targetBtnId = 'cart-footer') {
 }
 
 function handleBuy(btn, id) {
+    const itemId = decodeClickValue(id);
     const card = btn.closest('.card') || btn.closest('.product-detail');
     const img = card?.querySelector('img');
 
@@ -784,7 +825,7 @@ function handleBuy(btn, id) {
         }
     }
 
-    addToCart(Number(id));
+    addToCart(itemId);
 }
 
 
@@ -795,7 +836,7 @@ function renderProductGroupCard(group) {
     const inStock = group.items.reduce((sum, item) => sum + Number(item.stock || 0), 0);
     const prices = group.items.map(item => Number(item.price || 0)).filter(price => price > 0);
     const minPrice = prices.length ? Math.min(...prices) : Number(selected.price || 0);
-    const isFav = group.items.some(item => favorites.includes(Number(item.id)));
+    const isFav = group.items.some(item => favorites.includes(getProductId(item)));
     const flavorText = group.items.length > 1
         ? getProductOptionCountText(group)
         : getProductOption(selected, group.name);
@@ -803,7 +844,7 @@ function renderProductGroupCard(group) {
     return `
         <div class="card product-group-card" onclick="openProductGroupEncoded('${encodeClickValue(group.key)}')">
             <button class="fav-btn ${isFav ? 'active' : ''}"
-                onclick="event.stopPropagation(); toggleFav(${selected.id})">
+                onclick="event.stopPropagation(); toggleFav('${encodeClickValue(getProductId(selected))}')">
                 ${isFav ? '❤' : '♡'}
             </button>
 
@@ -829,7 +870,7 @@ function renderProductCard(p, { isFavorite = false } = {}) {
     return `
         <div class="card">
             <button class="fav-btn ${isFavorite ? 'active' : ''}"
-                onclick="toggleFav(${p.id})">
+                onclick="toggleFav('${encodeClickValue(getProductId(p))}')">
                 ${isFavorite ? '❤️' : '🤍'}
             </button>
 
@@ -846,7 +887,7 @@ function renderProductCard(p, { isFavorite = false } = {}) {
                 <div class="name">${p.name}</div>
 
                 <button class="buy-btn"
-                    onclick="handleBuy(this, ${p.id})"
+                    onclick="handleBuy(this, '${encodeClickValue(getProductId(p))}')"
                     ${p.stock <= 0 ? 'disabled style="opacity:0.5"' : ''}>
                     ${p.stock > 0 ? 'Купити' : 'Немає'}
                 </button>
