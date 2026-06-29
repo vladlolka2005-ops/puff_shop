@@ -150,6 +150,51 @@ function getProductFlavor(product, groupName = '') {
     return name;
 }
 
+function getProductOption(product, groupName = '') {
+    if (normalizeCategory(product.category) === normalizeCategory('Картриджі')) {
+        const resistance = normalizeText(
+            product.ohm ||
+            product.ohms ||
+            product.resistance ||
+            product.coil_ohm
+        );
+
+        if (resistance) return resistance;
+    }
+
+    return getProductFlavor(product, groupName);
+}
+
+function getProductOptionLabel(group) {
+    const category = group.items[0]?.category;
+
+    if (normalizeCategory(category) === normalizeCategory('Картриджі')) {
+        return 'Оми';
+    }
+
+    return 'Смаки';
+}
+
+function getProductChooseLabel(group) {
+    const category = group.items[0]?.category;
+
+    if (normalizeCategory(category) === normalizeCategory('Картриджі')) {
+        return 'Вибрати ом';
+    }
+
+    return 'Вибрати смак';
+}
+
+function getProductOptionCountText(group) {
+    const category = group.items[0]?.category;
+
+    if (normalizeCategory(category) === normalizeCategory('Картриджі')) {
+        return `${group.items.length} омів`;
+    }
+
+    return `${group.items.length} смаків`;
+}
+
 function getProductGroupKey(product) {
     const explicitKey = normalizeText(
         product.group_id ||
@@ -258,7 +303,7 @@ function renderProductGroupModal(group) {
     const selected = getSelectedVariant(group);
     const isFav = favorites.includes(Number(selected.id));
     const flavorButtons = group.items.map(item => {
-        const flavor = getProductFlavor(item, group.name);
+        const flavor = getProductOption(item, group.name);
         const isActive = Number(item.id) === Number(selected.id);
 
         return `
@@ -295,7 +340,7 @@ function renderProductGroupModal(group) {
             </div>
 
             <div class="flavor-section">
-                <div class="label">Смаки</div>
+                <div class="label">${getProductOptionLabel(group)}</div>
                 <div class="flavor-grid">
                     ${flavorButtons}
                 </div>
@@ -752,8 +797,8 @@ function renderProductGroupCard(group) {
     const minPrice = prices.length ? Math.min(...prices) : Number(selected.price || 0);
     const isFav = group.items.some(item => favorites.includes(Number(item.id)));
     const flavorText = group.items.length > 1
-        ? `${group.items.length} смаків`
-        : getProductFlavor(selected, group.name);
+        ? getProductOptionCountText(group)
+        : getProductOption(selected, group.name);
 
     return `
         <div class="card product-group-card" onclick="openProductGroupEncoded('${encodeClickValue(group.key)}')">
@@ -773,7 +818,7 @@ function renderProductGroupCard(group) {
                 <div class="name">${escapeHtml(group.name)}</div>
                 <div class="flavor-count">${escapeHtml(flavorText)}</div>
                 <button class="buy-btn" onclick="event.stopPropagation(); openProductGroupEncoded('${encodeClickValue(group.key)}')">
-                    Вибрати смак
+                    ${getProductChooseLabel(group)}
                 </button>
             </div>
         </div>
