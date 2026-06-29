@@ -55,9 +55,11 @@ async function load() {
     const [
         { data: products, error: productsError },
         { data: cartridges, error: cartridgesError },
+        { data: pods, error: podsError },
     ] = await Promise.all([
         supabaseClient.from('Products').select('*'),
         supabaseClient.from('cartridges').select('*'),
+        supabaseClient.from('pods').select('*'),
     ]);
 
     const error = productsError;
@@ -69,6 +71,10 @@ async function load() {
 
     if (cartridgesError) {
         console.error('Cartridges loading error:', cartridgesError);
+    }
+
+    if (podsError) {
+        console.error('Pods loading error:', podsError);
     }
 
     const normalizedProducts = (products || []).map(product => ({
@@ -84,7 +90,15 @@ async function load() {
         source_id: cartridge.id,
     }));
 
-    productsData = [...normalizedProducts, ...normalizedCartridges];
+    const normalizedPods = (pods || []).map(pod => ({
+        ...pod,
+        category: pod.category || 'POD-Системи',
+        client_id: `pod-${pod.id}`,
+        source_table: 'pods',
+        source_id: pod.id,
+    }));
+
+    productsData = [...normalizedProducts, ...normalizedCartridges, ...normalizedPods];
     validateCart();
     render();
 }
@@ -201,6 +215,16 @@ function getProductOption(product, groupName = '') {
         if (resistance) return resistance;
     }
 
+    if (normalizeCategory(product.category) === normalizeCategory('POD-Системи')) {
+        const color = normalizeText(
+            product.color ||
+            product.colour ||
+            product.pod_color
+        );
+
+        if (color) return color;
+    }
+
     return getProductFlavor(product, groupName);
 }
 
@@ -209,6 +233,10 @@ function getProductOptionLabel(group) {
 
     if (normalizeCategory(category) === normalizeCategory('Картриджі')) {
         return 'Оми';
+    }
+
+    if (normalizeCategory(category) === normalizeCategory('POD-Системи')) {
+        return 'Кольори';
     }
 
     return 'Смаки';
@@ -221,6 +249,10 @@ function getProductChooseLabel(group) {
         return 'Вибрати ом';
     }
 
+    if (normalizeCategory(category) === normalizeCategory('POD-Системи')) {
+        return 'Вибрати колір';
+    }
+
     return 'Вибрати смак';
 }
 
@@ -229,6 +261,10 @@ function getProductOptionCountText(group) {
 
     if (normalizeCategory(category) === normalizeCategory('Картриджі')) {
         return `${group.items.length} омів`;
+    }
+
+    if (normalizeCategory(category) === normalizeCategory('POD-Системи')) {
+        return `${group.items.length} кольорів`;
     }
 
     return `${group.items.length} смаків`;
