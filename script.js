@@ -42,7 +42,9 @@ function removeFromCart(id) {
     const itemId = decodeClickValue(id);
     delete cart[itemId];
     delete cart[`product-${itemId}`];
+    delete cart[`liquid-${itemId}`];
     delete cart[`cartridge-${itemId}`];
+    delete cart[`pod-${itemId}`];
     saveCart();
     updateFooter();
     renderCart();
@@ -54,10 +56,12 @@ function removeFromCart(id) {
 async function load() {
     const [
         { data: products, error: productsError },
+        { data: liquids, error: liquidsError },
         { data: cartridges, error: cartridgesError },
         { data: pods, error: podsError },
     ] = await Promise.all([
         supabaseClient.from('Products').select('*'),
+        supabaseClient.from('liquids').select('*'),
         supabaseClient.from('cartridges').select('*'),
         supabaseClient.from('pods').select('*'),
     ]);
@@ -67,6 +71,10 @@ async function load() {
         console.error('Ошибка загрузки:', error);
         console.error('Products loading error:', productsError);
         return;
+    }
+
+    if (liquidsError) {
+        console.error('Liquids loading error:', liquidsError);
     }
 
     if (cartridgesError) {
@@ -80,6 +88,14 @@ async function load() {
     const normalizedProducts = (products || []).map(product => ({
         ...product,
         client_id: `product-${product.id}`,
+    }));
+
+    const normalizedLiquids = (liquids || []).map(liquid => ({
+        ...liquid,
+        category: liquid.category || 'Рідина',
+        client_id: `liquid-${liquid.id}`,
+        source_table: 'liquids',
+        source_id: liquid.id,
     }));
 
     const normalizedCartridges = (cartridges || []).map(cartridge => ({
@@ -98,7 +114,7 @@ async function load() {
         source_id: pod.id,
     }));
 
-    productsData = [...normalizedProducts, ...normalizedCartridges, ...normalizedPods];
+    productsData = [...normalizedProducts, ...normalizedLiquids, ...normalizedCartridges, ...normalizedPods];
     validateCart();
     render();
 }
