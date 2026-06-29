@@ -693,6 +693,58 @@ function openHistory() {
 
 function closeModal(id) {
     document.getElementById(id).style.display = 'none';
+    if (id === 'checkout-screen') {
+        resetCheckoutState();
+    }
+}
+
+function getTelegramMainButton() {
+    return window.Telegram?.WebApp?.MainButton || null;
+}
+
+function setCheckoutSubmitting(submitting) {
+    const submitBtn = document.getElementById('checkout-submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = submitting;
+        submitBtn.style.opacity = submitting ? '0.6' : '';
+        submitBtn.textContent = submitting ? 'ВІДПРАВЛЯЄМО...' : 'ПІДТВЕРДИТИ';
+    }
+
+    const mainBtn = getTelegramMainButton();
+    if (!mainBtn) return;
+
+    if (submitting) {
+        mainBtn.showProgress(false);
+        mainBtn.disable();
+    } else {
+        mainBtn.hideProgress();
+        mainBtn.enable();
+    }
+}
+
+function resetCheckoutState() {
+    isSubmittingOrder = false;
+    setCheckoutSubmitting(false);
+
+    const mainBtn = getTelegramMainButton();
+    if (mainBtn) {
+        mainBtn.offClick(submitOrder);
+        mainBtn.hide();
+    }
+}
+
+function showCheckoutError(message, inputId) {
+    isSubmittingOrder = false;
+    setCheckoutSubmitting(false);
+    alert(message);
+
+    setTimeout(() => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.focus();
+            if (typeof input.select === 'function') input.select();
+        }
+    }, 100);
 }
 
 
@@ -702,11 +754,13 @@ function openCheckout() {
     if (!Object.keys(cart).length) return alert('Кошик порожній!');
     document.getElementById('checkout-screen').style.display = 'block';
     toggleDeliveryFields();
+    isSubmittingOrder = false;
+    setCheckoutSubmitting(false);
 
-    if (window.Telegram?.WebApp?.MainButton) {
-        const mainBtn = window.Telegram.WebApp.MainButton;
+    const mainBtn = getTelegramMainButton();
+    if (mainBtn) {
         mainBtn.setText("ПІДТВЕРДИТИ ЗАМОВЛЕННЯ");
-        mainBtn.offClick(openCheckout);
+        mainBtn.offClick(submitOrder);
         mainBtn.onClick(submitOrder);
     }
 
@@ -735,15 +789,15 @@ async function submitOrder() {
     }
 
     if (!name || !/^\d{9}$/.test(cleanPhone)) {
-        return alert('Перевірте контактні дані! Номер повинен містити 9 цифр (наприклад: 931234567)');
+        return showCheckoutError('Перевірте контактні дані! Номер повинен містити 9 цифр (наприклад: 931234567)', !name ? 'order-name' : 'order-phone');
     }
 
     if (delivery === 'nova_poshta' && (!city || !warehouse)) {
-        return alert('Вкажіть місто та відділення Нової Пошти!');
+        return showCheckoutError('Вкажіть місто та відділення Нової Пошти!', !city ? 'order-city' : 'order-warehouse');
     }
 
     const items = Object.values(cart);
-    if (!items.length) return alert('Кошик порожній!');
+    if (!items.length) return showCheckoutError('Кошик порожній!');
 
     const total = items.reduce((s, i) => s + i.price * i.qty, 0);
 
@@ -760,26 +814,36 @@ async function submitOrder() {
 
     // Инсертим заказ напрямую в английские названия полей
     isSubmittingOrder = true;
+    setCheckoutSubmitting(true);
 
-    const { error: orderError } = await supabaseClient
-        .from('orders')
-        .insert([{
-            items: orderItems,
-            total: total,
-            status: 'pending',
-            customer_name: name,
-            telegram: telegramUsername,
-            telegram_id: telegramId,
-            phone: cleanPhone,
-            delivery: delivery,
-            payment: payment,
-            city: delivery === 'nova_poshta' ? city : null,
-            warehouse: delivery === 'nova_poshta' ? warehouse : null,
-            comment: comment || null,
-        }]);
+    let orderError = null;
+
+    try {
+        const result = await supabaseClient
+            .from('orders')
+            .insert([{
+                items: orderItems,
+                total: total,
+                status: 'pending',
+                customer_name: name,
+                telegram: telegramUsername,
+                telegram_id: telegramId,
+                phone: cleanPhone,
+                delivery: delivery,
+                payment: payment,
+                city: delivery === 'nova_poshta' ? city : null,
+                warehouse: delivery === 'nova_poshta' ? warehouse : null,
+                comment: comment || null,
+            }]);
+
+        orderError = result.error;
+    } catch (err) {
+        orderError = err;
+    }
 
     if (orderError) {
         isSubmittingOrder = false;
+        setCheckoutSubmitting(false);
         console.error('Ошибка сохранения заказа:', orderError);
 
         const errorText = [
@@ -807,6 +871,7 @@ async function submitOrder() {
     updateFooter();
     render();
     isSubmittingOrder = false;
+    setCheckoutSubmitting(false);
 }
 
 
