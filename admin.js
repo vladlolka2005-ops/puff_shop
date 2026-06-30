@@ -3,7 +3,7 @@
 const S_URL = 'https://bsiavngtycpetiiikmxd.supabase.co';
 const S_KEY = 'sb_publishable_5WlTFr_cduyplbY4BS2w2w_cevKpWmW';
 const ADMIN_PIN = '2580';
-const ADMIN_VERSION = 'admin-status-simple-v10';
+const ADMIN_VERSION = 'admin-force-status-v11';
 
 let supabaseClient = null;
 
@@ -149,7 +149,7 @@ async function updateOrderStatus(orderId, newStatus, button) {
     button.disabled = true;
     button.textContent = 'Зберігаю...';
 
-    const { error } = await client.rpc('admin_set_order_status_simple', {
+    const { error } = await client.rpc('admin_force_order_status_v2', {
         p_order_id: String(orderId),
         p_status: newStatus,
         p_pin: ADMIN_PIN,
