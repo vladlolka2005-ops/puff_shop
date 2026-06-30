@@ -18,7 +18,11 @@ module.exports = async function handler(req, res) {
         return;
     }
 
-    const botToken = String(process.env.TELEGRAM_BOT_TOKEN || '').trim().replace(/^bot/i, '');
+    const botToken = String(process.env.TELEGRAM_BOT_TOKEN || '')
+        .trim()
+        .replace(/^["']|["']$/g, '')
+        .replace(/\s+/g, '')
+        .replace(/^bot/i, '');
     const adminPin = process.env.ADMIN_PIN || '2580';
 
     if (!botToken) {
@@ -77,8 +81,14 @@ module.exports = async function handler(req, res) {
     const telegramResult = await telegramResponse.json().catch(() => null);
 
     if (!telegramResponse.ok || telegramResult?.ok === false) {
+        const telegramError = telegramResult?.description || telegramResponse.statusText || 'Telegram API error';
+        const friendlyError = telegramResponse.status === 404
+            ? 'Telegram bot token is invalid. Check TELEGRAM_BOT_TOKEN in Vercel.'
+            : telegramError;
+
         res.status(502).json({
-            error: telegramResult?.description || telegramResponse.statusText || 'Telegram API error',
+            error: friendlyError,
+            telegram_error: telegramError,
             telegram_status: telegramResponse.status,
         });
         return;

@@ -3,7 +3,7 @@
 const S_URL = 'https://bsiavngtycpetiiikmxd.supabase.co';
 const S_KEY = 'sb_publishable_5WlTFr_cduyplbY4BS2w2w_cevKpWmW';
 const ADMIN_PIN = '2580';
-const ADMIN_VERSION = 'admin-force-status-v11';
+const ADMIN_VERSION = 'admin-force-status-v12';
 
 let supabaseClient = null;
 
@@ -186,8 +186,18 @@ async function notifyCustomerStatusChange(order, newStatus) {
 
     if (!response.ok) {
         console.error('Telegram notification error:', result);
-        alert(`Статус змінено, але повідомлення покупцю не відправлено:\n${result.error || response.statusText}`);
+        alert(`Статус змінено, але повідомлення покупцю не відправлено:\n${formatNotifyError(result, response)}`);
     }
+}
+
+function formatNotifyError(result, response) {
+    const lines = [
+        result.error || response.statusText,
+        result.telegram_status ? `Telegram status: ${result.telegram_status}` : '',
+        result.telegram_error ? `Telegram error: ${result.telegram_error}` : '',
+    ].filter(Boolean);
+
+    return lines.join('\n');
 }
 
 async function sendCustomerMessage(button) {
@@ -229,7 +239,7 @@ async function sendCustomerMessage(button) {
 
     if (!response.ok) {
         console.error('Telegram message error:', result);
-        alert(`Не вдалося відправити повідомлення:\n${result.error || response.statusText}`);
+        alert(`Не вдалося відправити повідомлення:\n${formatNotifyError(result, response)}`);
         return;
     }
 
