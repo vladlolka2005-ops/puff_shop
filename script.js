@@ -416,6 +416,63 @@ function escapeAttr(value) {
     return escapeHtml(value).replaceAll('\n', ' ');
 }
 
+function normalizeImageUrl(value) {
+    const url = normalizeText(value);
+    if (!url) return '';
+
+    if (/^https?:\/\//i.test(url) || /^data:image\//i.test(url)) return url;
+    if (url.startsWith('//')) return `https:${url}`;
+    if (url.startsWith('/storage/v1/')) return `${S_URL}${url}`;
+    if (url.startsWith('storage/v1/')) return `${S_URL}/${url}`;
+
+    return url;
+}
+
+function getProductImage(product) {
+    return normalizeImageUrl(
+        product?.image_url ||
+        product?.imageUrl ||
+        product?.variant_image_url ||
+        product?.color_image_url ||
+        product?.pod_image_url ||
+        product?.image ||
+        product?.img_url ||
+        product?.img ||
+        product?.photo_url ||
+        product?.photo ||
+        product?.color_image ||
+        product?.picture ||
+        product?.thumbnail ||
+        ''
+    );
+}
+
+function handleImageError(img) {
+    if (!img) return;
+
+    img.style.display = 'none';
+    const wrap = img.parentElement;
+
+    if (wrap && !wrap.querySelector('.image-placeholder')) {
+        const placeholder = document.createElement('div');
+        placeholder.className = wrap.classList.contains('cart-thumb-wrap')
+            ? 'cart-image-placeholder image-placeholder'
+            : 'image-placeholder';
+        placeholder.textContent = 'PUFF';
+        wrap.appendChild(placeholder);
+    }
+}
+
+function renderProductImage(product, attrs = '') {
+    const imageUrl = getProductImage(product);
+
+    if (!imageUrl) {
+        return '<div class="image-placeholder">PUFF</div>';
+    }
+
+    return `<img src="${escapeAttr(imageUrl)}" ${attrs} onerror="handleImageError(this)">`;
+}
+
 function encodeClickValue(value) {
     return encodeURIComponent(String(value ?? ''));
 }
@@ -656,6 +713,7 @@ function renderProductGroupModal(group) {
     }
 
     const selected = getSelectedVariant(group);
+    const selectedImage = getProductImage(selected);
     const isFav = favorites.includes(getProductId(selected));
     const flavorButtons = group.items.map(item => {
         const flavor = getProductOption(item, group.name);
@@ -683,9 +741,12 @@ function renderProductGroupModal(group) {
             </button>
 
             <div class="detail-image-wrap">
-                <img src="${escapeAttr(selected.image_url || '')}"
-                     onclick="openImageModal('${escapeAttr(selected.image_url || '')}')"
-                     style="cursor:pointer;">
+                ${renderProductImage(
+                    selected,
+                    selectedImage
+                        ? `onclick="openImageModal('${escapeAttr(selectedImage)}')" style="cursor:pointer;"`
+                        : ''
+                )}
             </div>
 
             <div class="detail-info">
@@ -827,12 +888,17 @@ function renderCart() {
     for (let id in cart) {
         const item = cart[id];
         const itemId = getProductId(item);
+        const itemImage = getProductImage(item);
         total += item.price * item.qty;
 
         html += `
             <div class="cart-item" style="justify-content: space-between;">
                 <div style="display:flex; gap:10px; align-items:center;">
-                    <img src="${item.image_url}">
+                    <div class="cart-thumb-wrap">
+                        ${itemImage
+                            ? `<img src="${escapeAttr(itemImage)}" onerror="handleImageError(this)">`
+                            : '<div class="cart-image-placeholder image-placeholder">PUFF</div>'}
+                    </div>
                     <div>
                         <div>${item.name}</div>
                         <div style="font-weight:bold;">${item.price * item.qty} ₴</div>
@@ -1217,6 +1283,8 @@ if (window.Telegram?.WebApp) {
 // ================= IMAGE MODAL =================
 
 function openImageModal(src) {
+    if (!src) return;
+
     const modal = document.getElementById('image-modal');
     const img = document.getElementById('modal-image');
 
@@ -1294,8 +1362,7 @@ function renderProductGroupCard(group) {
             </button>
 
             <div class="img-wrap">
-                <img src="${escapeAttr(selected.image_url || '')}"
-                     style="cursor:pointer;">
+                ${renderProductImage(selected, 'style="cursor:pointer;"')}
             </div>
 
             <div class="info">
@@ -1312,6 +1379,8 @@ function renderProductGroupCard(group) {
 }
 
 function renderProductCard(p, { isFavorite = false } = {}) {
+    const imageUrl = getProductImage(p);
+
     return `
         <div class="card">
             <button class="fav-btn ${isFavorite ? 'active' : ''}"
@@ -1320,9 +1389,12 @@ function renderProductCard(p, { isFavorite = false } = {}) {
             </button>
 
             <div class="img-wrap">
-                <img src="${p.image_url}"
-                     onclick="openImageModal('${p.image_url}')"
-                     style="cursor:pointer;">
+                ${renderProductImage(
+                    p,
+                    imageUrl
+                        ? `onclick="openImageModal('${escapeAttr(imageUrl)}')" style="cursor:pointer;"`
+                        : ''
+                )}
             </div>
 
             <div class="info">
