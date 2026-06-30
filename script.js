@@ -837,6 +837,9 @@ async function submitOrder() {
 
     const orderItems = items.map(i => ({
         id: i.id,
+        client_id: getProductId(i),
+        source_table: i.source_table || 'Products',
+        source_id: i.source_id || i.id,
         name: i.name,
         qty: i.qty,
         price: i.price,
