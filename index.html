@@ -21,7 +21,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 
     <!-- Основний скрипт -->
-  <script src="script.js?v=14" defer></script>
+  <script src="script.js?v=15" defer></script>
 
     <!-- Стилі -->
     <link rel="stylesheet" href="styles.css?v=3">
@@ -59,6 +59,11 @@
                     <button id="lang-en-btn" type="button" onclick="setLanguage('en')">Eng</button>
                 </div>
             </div>
+
+            <a class="profile-menu-item profile-link-item" href="privacy.html">
+                <div><span>🔒</span> <span id="profile-privacy-label">Політика конфіденційності</span></div>
+                <span style="color: #b2bcc4;">›</span>
+            </a>
 
             <div class="manager-btn-wrapper">
                 <a href="https://t.me/nnpuff" target="_blank" rel="noopener noreferrer" class="manager-btn">
@@ -204,6 +209,10 @@
 
             <div style="margin-top: 30px; padding-bottom: 50px;">
                 <button class="main-btn" id="checkout-submit-btn" onclick="submitOrder()">ПІДТВЕРДИТИ</button>
+                <div class="privacy-consent" id="privacy-consent">
+                    Оформлюючи замовлення, ви погоджуєтесь з
+                    <a href="privacy.html">Політикою конфіденційності</a>.
+                </div>
             </div>
         </div>
     </div>

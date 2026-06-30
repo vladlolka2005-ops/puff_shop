@@ -19,6 +19,7 @@ const I18N = {
         orderHistory: 'Історія замовлень',
         history: 'Історія',
         language: 'Мова',
+        privacy: 'Політика конфіденційності',
         manager: 'Написати менеджеру',
         appVersion: 'Версія додатку',
         liquid: 'Рідина',
@@ -63,6 +64,7 @@ const I18N = {
         checkContacts: 'Перевірте контактні дані! Номер повинен містити 9 цифр (наприклад: 931234567)',
         fillDelivery: 'Вкажіть місто та відділення Нової Пошти!',
         saveOrderError: 'Помилка збереження замовлення!',
+        privacyConsent: 'Оформлюючи замовлення, ви погоджуєтесь з <a href="privacy.html">Політикою конфіденційності</a>.',
     },
     en: {
         profile: 'Profile',
@@ -71,6 +73,7 @@ const I18N = {
         orderHistory: 'Order history',
         history: 'History',
         language: 'Language',
+        privacy: 'Privacy Policy',
         manager: 'Message manager',
         appVersion: 'App version',
         liquid: 'Liquids',
@@ -115,6 +118,7 @@ const I18N = {
         checkContacts: 'Check contact details! The number must contain 9 digits, for example: 931234567',
         fillDelivery: 'Enter city and Nova Poshta branch!',
         saveOrderError: 'Order saving error!',
+        privacyConsent: 'By placing an order, you agree to the <a href="privacy.html">Privacy Policy</a>.',
     },
 };
 
@@ -150,6 +154,7 @@ function applyTranslations() {
     setText('profile-favorites-label', t('favorites'));
     setText('profile-history-label', t('orderHistory'));
     setText('profile-language-label', t('language'));
+    setText('profile-privacy-label', t('privacy'));
     setText('manager-link-label', t('manager'));
     setText('app-version-label', t('appVersion'));
     setText('favorites-title', t('favorites'));
@@ -166,6 +171,7 @@ function applyTranslations() {
     setText('delivery-np-option', t('novaPoshta'));
     setText('comment-label', t('comment'));
     setText('checkout-submit-btn', t('confirm'));
+    setText('privacy-consent', t('privacyConsent'));
     setText('success-title', t('successTitle'));
     setText('success-text', t('successText'));
     setText('success-return-btn', t('returnBack'));

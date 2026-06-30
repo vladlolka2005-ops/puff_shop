@@ -375,6 +375,11 @@ select.input-field {
     background: #344656;
 }
 
+.profile-link-item {
+    color: white;
+    text-decoration: none;
+}
+
 .profile-language {
     display: flex;
     align-items: center;
@@ -428,6 +433,20 @@ select.input-field {
     font-size: 15px;
     width: 100%;
     color: white;
+}
+
+.privacy-consent {
+    margin-top: 10px;
+    color: #b2bcc4;
+    font-size: 12px;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.privacy-consent a {
+    color: var(--tg-blue);
+    font-weight: bold;
+    text-decoration: none;
 }
 
 
