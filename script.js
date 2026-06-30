@@ -421,8 +421,8 @@ function normalizeImageUrl(value) {
     if (!url) return '';
 
     if (/^data:image\//i.test(url)) return url;
-    if (/^https?:\/\//i.test(url)) return encodeURI(url);
-    if (url.startsWith('//')) return encodeURI(`https:${url}`);
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith('//')) return `https:${url}`;
     if (url.startsWith('/storage/v1/')) return encodeURI(`${S_URL}${url}`);
     if (url.startsWith('storage/v1/')) return encodeURI(`${S_URL}/${url}`);
 
@@ -451,6 +451,7 @@ function getProductImage(product) {
 function handleImageError(img) {
     if (!img) return;
 
+    console.warn('Product image failed:', img.dataset.productName || '', img.getAttribute('src'));
     img.style.display = 'none';
     const wrap = img.parentElement;
 
@@ -471,7 +472,7 @@ function renderProductImage(product, attrs = '') {
         return '<div class="image-placeholder">PUFF</div>';
     }
 
-    return `<img src="${escapeAttr(imageUrl)}" ${attrs} onerror="handleImageError(this)">`;
+    return `<img src="${escapeAttr(imageUrl)}" data-product-name="${escapeAttr(product?.name || '')}" ${attrs} onerror="handleImageError(this)">`;
 }
 
 function getGroupImageProduct(group) {
@@ -907,7 +908,7 @@ function renderCart() {
                 <div style="display:flex; gap:10px; align-items:center;">
                     <div class="cart-thumb-wrap">
                         ${itemImage
-                            ? `<img src="${escapeAttr(itemImage)}" onerror="handleImageError(this)">`
+                            ? `<img src="${escapeAttr(itemImage)}" data-product-name="${escapeAttr(item.name || '')}" onerror="handleImageError(this)">`
                             : '<div class="cart-image-placeholder image-placeholder">PUFF</div>'}
                     </div>
                     <div>
