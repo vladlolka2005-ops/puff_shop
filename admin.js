@@ -148,21 +148,11 @@ async function updateOrderStatus(orderId, newStatus, button) {
     button.disabled = true;
     button.textContent = 'Зберігаю...';
 
-    let { error } = await client.rpc('admin_update_order_status', {
+    const { error } = await client.rpc('admin_update_order_status', {
         p_order_id: String(orderId),
         p_status: newStatus,
         p_pin: ADMIN_PIN,
     });
-
-    if (isStockCheckError(error)) {
-        console.warn('Stock check failed in RPC, updating order status without stock write-off:', error);
-        const fallback = await client
-            .from('orders')
-            .update({ status: newStatus })
-            .eq('id', orderId);
-
-        error = fallback.error;
-    }
 
     button.disabled = false;
     button.textContent = 'Зберегти';
@@ -175,11 +165,6 @@ async function updateOrderStatus(orderId, newStatus, button) {
 
     await notifyCustomerStatusChange(order, newStatus);
     await loadOrders();
-}
-
-function isStockCheckError(error) {
-    const message = String(error?.message || '').toLowerCase();
-    return message.includes('not enough stock');
 }
 
 async function notifyCustomerStatusChange(order, newStatus) {
