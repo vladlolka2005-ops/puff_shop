@@ -21,17 +21,17 @@
     <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 
     <!-- Основний скрипт -->
-  <script src="script.js?v=13" defer></script>
+  <script src="script.js?v=14" defer></script>
 
     <!-- Стилі -->
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 
     <!-- Заголовок -->
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;">
         <h1 style="margin: 0; font-size: 22px;">PUFF Shop</h1>
-        <button class="cat-btn" onclick="openProfile()">👤 Профіль</button>
+        <button class="cat-btn" id="profile-open-btn" onclick="openProfile()">👤 Профіль</button>
     </div>
 
     <!-- Профіль -->
@@ -39,27 +39,35 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button class="back-btn" onclick="closeModal('profile-screen')">‹</button>
-                Мій профіль
+                <span id="profile-title">Мій профіль</span>
             </div>
 
             <div class="profile-menu-item" onclick="openFavorites()">
-                <div><span>❤️</span> Обране</div>
+                <div><span>❤️</span> <span id="profile-favorites-label">Обране</span></div>
                 <span style="color: #b2bcc4;">›</span>
             </div>
 
             <div class="profile-menu-item" onclick="openHistory()">
-                <div><span>📦</span> Історія замовлень</div>
+                <div><span>📦</span> <span id="profile-history-label">Історія замовлень</span></div>
                 <span style="color: #b2bcc4;">›</span>
+            </div>
+
+            <div class="profile-language">
+                <div id="profile-language-label">Мова</div>
+                <div class="language-toggle">
+                    <button id="lang-uk-btn" type="button" onclick="setLanguage('uk')">Укр</button>
+                    <button id="lang-en-btn" type="button" onclick="setLanguage('en')">Eng</button>
+                </div>
             </div>
 
             <div class="manager-btn-wrapper">
                 <a href="https://t.me/nnpuff" target="_blank" rel="noopener noreferrer" class="manager-btn">
-                    <span>✈️</span> Написати менеджеру
+                    <span>✈️</span> <span id="manager-link-label">Написати менеджеру</span>
                 </a>
             </div>
 
             <div style="text-align: center; color: #b2bcc4; font-size: 13px; margin-top: 30px;">
-                Версія додатку 1.0.4
+                <span id="app-version-label">Версія додатку</span> 1.0.4
             </div>
         </div>
     </div>
@@ -69,7 +77,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button class="back-btn" onclick="closeModal('favorites-screen')">‹</button>
-                Обране
+                <span id="favorites-title">Обране</span>
             </div>
 
             <div id="favorites-grid" class="grid"></div>
@@ -88,7 +96,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button class="back-btn" onclick="closeModal('history-screen')">‹</button>
-                Історія
+                <span id="history-title">Історія</span>
             </div>
         </div>
     </div>
@@ -124,7 +132,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button class="back-btn" onclick="closeModal('cart-screen')">‹</button>
-                Кошик
+                <span id="cart-title">Кошик</span>
             </div>
 
             <div id="cart-list"></div>
@@ -133,7 +141,7 @@
                 <div id="cart-total" style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">
                     Разом: 0 ₴
                 </div>
-                <button class="main-btn" onclick="openCheckout()">ОФОРМИТИ ЗАМОВЛЕННЯ</button>
+                <button class="main-btn" id="checkout-open-btn" onclick="openCheckout()">ОФОРМИТИ ЗАМОВЛЕННЯ</button>
             </div>
         </div>
     </div>
@@ -143,17 +151,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button class="back-btn" onclick="closeModal('checkout-screen')">‹</button>
-                Оформлення
+                <span id="checkout-title">Оформлення</span>
             </div>
 
             <div id="checkout-error" class="checkout-error" style="display: none;"></div>
 
-            <div class="label">👤 КОНТАКТНІ ДАНІ:</div>
+            <div class="label" id="contact-label">👤 КОНТАКТНІ ДАНІ:</div>
             <div class="input-group">
                 <input type="text" class="input-field" placeholder="Прізвище Ім'я по батькові" id="order-name">
             </div>
 
-            <div class="label" style="margin-top: 15px;">Ваш номер телефону:</div>
+            <div class="label" id="phone-label" style="margin-top: 15px;">Ваш номер телефону:</div>
             <div class="input-group">
                 <div style="position: relative;">
                     <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 8px;">
@@ -165,18 +173,18 @@
                 </div>
             </div>
 
-            <div class="label" style="margin-top: 20px;">💳 СПОСІБ ОПЛАТИ:</div>
+            <div class="label" id="payment-label" style="margin-top: 20px;">💳 СПОСІБ ОПЛАТИ:</div>
             <div class="input-group custom-select">
                 <select id="order-payment" class="input-field">
-                    <option value="card">Карта</option>
-                    <option value="cash">Готівка</option>
+                    <option value="card" id="payment-card-option">Карта</option>
+                    <option value="cash" id="payment-cash-option">Готівка</option>
                 </select>
             </div>
 
-            <div class="label" style="margin-top: 15px;">🚚 СПОСІБ ДОСТАВКИ:</div>
+            <div class="label" id="delivery-label" style="margin-top: 15px;">🚚 СПОСІБ ДОСТАВКИ:</div>
             <div class="input-group custom-select">
                 <select class="input-field" id="order-delivery" onchange="toggleDeliveryFields()">
-                    <option value="nova_poshta">Нова Пошта</option>
+                    <option value="nova_poshta" id="delivery-np-option">Нова Пошта</option>
                 </select>
             </div>
 
@@ -189,7 +197,7 @@
                 </div>
             </div>
 
-            <div class="label" style="margin-top: 15px;">📝 Коментар до замовлення:</div>
+            <div class="label" id="comment-label" style="margin-top: 15px;">📝 Коментар до замовлення:</div>
             <div class="input-group">
                 <textarea id="order-comment" class="input-field comment-field" placeholder="Ваші побажання (необов'язково)"></textarea>
             </div>
@@ -204,12 +212,12 @@
     <div id="success-screen" class="modal" style="display: none; text-align: center;">
         <div class="modal-content" style="margin-top: 50px;">
             <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
-            <h2 style="color: var(--tg-blue);">Дякуємо!</h2>
-            <p style="color: #b2bcc4; font-size: 16px; line-height: 1.5;">
+            <h2 id="success-title" style="color: var(--tg-blue);">Дякуємо!</h2>
+            <p id="success-text" style="color: #b2bcc4; font-size: 16px; line-height: 1.5;">
                 Ваше замовлення прийнято.<br>
                 Наш менеджер зв'яжеться з вами.
             </p>
-            <button class="main-btn" onclick="location.reload()" style="margin-top: 20px;">
+            <button class="main-btn" id="success-return-btn" onclick="location.reload()" style="margin-top: 20px;">
                 Повернутися
             </button>
         </div>

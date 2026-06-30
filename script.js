@@ -9,6 +9,114 @@ let productsData = [];
 let currentSort = 'promo';
 let selectedFlavorByGroup = {};
 let currentCategory = 'liquid';
+let currentLang = localStorage.getItem('puff_lang') || 'uk';
+
+const I18N = {
+    uk: {
+        profile: 'Профіль',
+        myProfile: 'Мій профіль',
+        favorites: 'Обране',
+        orderHistory: 'Історія замовлень',
+        history: 'Історія',
+        language: 'Мова',
+        manager: 'Написати менеджеру',
+        appVersion: 'Версія додатку',
+        liquid: 'Рідина',
+        pods: 'POD-Системи',
+        cartridges: 'Картриджі',
+        promo: '🔥 Акція',
+        priceAsc: '📈 Дешевші спочатку',
+        priceDesc: '📉 Дорожчі спочатку',
+        cartEmpty: 'Кошик порожній',
+        cart: 'Кошик',
+        total: 'Разом',
+        checkoutOpen: 'ОФОРМИТИ ЗАМОВЛЕННЯ',
+        checkout: 'Оформлення',
+        contactData: '👤 КОНТАКТНІ ДАНІ:',
+        namePlaceholder: "Прізвище Ім'я по батькові",
+        phone: 'Ваш номер телефону:',
+        payment: '💳 СПОСІБ ОПЛАТИ:',
+        card: 'Карта',
+        cash: 'Готівка',
+        delivery: '🚚 СПОСІБ ДОСТАВКИ:',
+        novaPoshta: 'Нова Пошта',
+        city: 'Місто',
+        warehouse: '№ Відділення',
+        comment: '📝 Коментар до замовлення:',
+        commentPlaceholder: "Ваші побажання (необов'язково)",
+        confirm: 'ПІДТВЕРДИТИ',
+        sending: 'ВІДПРАВЛЯЄМО...',
+        confirmOrder: 'ПІДТВЕРДИТИ ЗАМОВЛЕННЯ',
+        successTitle: 'Дякуємо!',
+        successText: "Ваше замовлення прийнято.<br>Наш менеджер зв'яжеться з вами.",
+        returnBack: 'Повернутися',
+        inStock: 'В наявності',
+        outOfStock: 'Немає в наявності',
+        buy: 'Купити',
+        unavailable: 'Немає',
+        flavors: 'Смаки',
+        ohms: 'Оми',
+        colors: 'Кольори',
+        emptyFavorites: 'Тут поки порожньо',
+        noOrders: 'Замовлень ще немає',
+        maxStock: 'Досягнуто максимальну кількість товару на складі',
+        checkContacts: 'Перевірте контактні дані! Номер повинен містити 9 цифр (наприклад: 931234567)',
+        fillDelivery: 'Вкажіть місто та відділення Нової Пошти!',
+        saveOrderError: 'Помилка збереження замовлення!',
+    },
+    en: {
+        profile: 'Profile',
+        myProfile: 'My profile',
+        favorites: 'Favorites',
+        orderHistory: 'Order history',
+        history: 'History',
+        language: 'Language',
+        manager: 'Message manager',
+        appVersion: 'App version',
+        liquid: 'Liquids',
+        pods: 'POD Systems',
+        cartridges: 'Cartridges',
+        promo: '🔥 Sale',
+        priceAsc: '📈 Cheapest first',
+        priceDesc: '📉 Most expensive first',
+        cartEmpty: 'Cart is empty',
+        cart: 'Cart',
+        total: 'Total',
+        checkoutOpen: 'CHECKOUT',
+        checkout: 'Checkout',
+        contactData: '👤 CONTACT DETAILS:',
+        namePlaceholder: 'Full name',
+        phone: 'Your phone number:',
+        payment: '💳 PAYMENT METHOD:',
+        card: 'Card',
+        cash: 'Cash',
+        delivery: '🚚 DELIVERY METHOD:',
+        novaPoshta: 'Nova Poshta',
+        city: 'City',
+        warehouse: 'Branch number',
+        comment: '📝 Order comment:',
+        commentPlaceholder: 'Your notes (optional)',
+        confirm: 'CONFIRM',
+        sending: 'SENDING...',
+        confirmOrder: 'CONFIRM ORDER',
+        successTitle: 'Thank you!',
+        successText: 'Your order has been received.<br>Our manager will contact you.',
+        returnBack: 'Return',
+        inStock: 'In stock',
+        outOfStock: 'Out of stock',
+        buy: 'Buy',
+        unavailable: 'Unavailable',
+        flavors: 'Flavors',
+        ohms: 'Ohms',
+        colors: 'Colors',
+        emptyFavorites: 'Nothing here yet',
+        noOrders: 'No orders yet',
+        maxStock: 'Maximum stock quantity reached',
+        checkContacts: 'Check contact details! The number must contain 9 digits, for example: 931234567',
+        fillDelivery: 'Enter city and Nova Poshta branch!',
+        saveOrderError: 'Order saving error!',
+    },
+};
 
 const CATEGORY_VALUES = {
     liquid: ['Рідина'],
@@ -19,6 +127,83 @@ const CATEGORY_VALUES = {
 let cart = {};
 let favorites = JSON.parse(localStorage.getItem('puff_favs')) || [];
 let isSubmittingOrder = false;
+
+function t(key) {
+    return I18N[currentLang]?.[key] || I18N.uk[key] || key;
+}
+
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = value;
+}
+
+function setPlaceholder(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.placeholder = value;
+}
+
+function applyTranslations() {
+    document.documentElement.lang = currentLang;
+
+    setText('profile-open-btn', `👤 ${t('profile')}`);
+    setText('profile-title', t('myProfile'));
+    setText('profile-favorites-label', t('favorites'));
+    setText('profile-history-label', t('orderHistory'));
+    setText('profile-language-label', t('language'));
+    setText('manager-link-label', t('manager'));
+    setText('app-version-label', t('appVersion'));
+    setText('favorites-title', t('favorites'));
+    setText('history-title', t('history'));
+    setText('cart-title', t('cart'));
+    setText('checkout-open-btn', t('checkoutOpen'));
+    setText('checkout-title', t('checkout'));
+    setText('contact-label', t('contactData'));
+    setText('phone-label', t('phone'));
+    setText('payment-label', t('payment'));
+    setText('payment-card-option', t('card'));
+    setText('payment-cash-option', t('cash'));
+    setText('delivery-label', t('delivery'));
+    setText('delivery-np-option', t('novaPoshta'));
+    setText('comment-label', t('comment'));
+    setText('checkout-submit-btn', t('confirm'));
+    setText('success-title', t('successTitle'));
+    setText('success-text', t('successText'));
+    setText('success-return-btn', t('returnBack'));
+
+    setPlaceholder('order-name', t('namePlaceholder'));
+    setPlaceholder('order-city', t('city'));
+    setPlaceholder('order-warehouse', t('warehouse'));
+    setPlaceholder('order-comment', t('commentPlaceholder'));
+
+    const categories = document.querySelectorAll('.categories .cat-btn');
+    if (categories[0]) categories[0].textContent = t('liquid');
+    if (categories[1]) categories[1].textContent = t('pods');
+    if (categories[2]) categories[2].textContent = t('cartridges');
+
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect) {
+        const selected = sortSelect.value;
+        sortSelect.innerHTML = `
+            <option value="promo">${t('promo')}</option>
+            <option value="price-asc">${t('priceAsc')}</option>
+            <option value="price-desc">${t('priceDesc')}</option>
+        `;
+        sortSelect.value = selected;
+    }
+
+    document.getElementById('lang-uk-btn')?.classList.toggle('active', currentLang === 'uk');
+    document.getElementById('lang-en-btn')?.classList.toggle('active', currentLang === 'en');
+
+    updateFooter();
+    renderCart();
+    render();
+}
+
+function setLanguage(lang) {
+    currentLang = lang === 'en' ? 'en' : 'uk';
+    localStorage.setItem('puff_lang', currentLang);
+    applyTranslations();
+}
 
 
 // ================= CART STORAGE =================
@@ -248,42 +433,42 @@ function getProductOptionLabel(group) {
     const category = group.items[0]?.category;
 
     if (normalizeCategory(category) === normalizeCategory('Картриджі')) {
-        return 'Оми';
+        return t('ohms');
     }
 
     if (normalizeCategory(category) === normalizeCategory('POD-Системи')) {
-        return 'Кольори';
+        return t('colors');
     }
 
-    return 'Смаки';
+    return t('flavors');
 }
 
 function getProductChooseLabel(group) {
     const category = group.items[0]?.category;
 
     if (normalizeCategory(category) === normalizeCategory('Картриджі')) {
-        return 'Вибрати ом';
+        return currentLang === 'en' ? 'Choose ohm' : 'Вибрати ом';
     }
 
     if (normalizeCategory(category) === normalizeCategory('POD-Системи')) {
-        return 'Вибрати колір';
+        return currentLang === 'en' ? 'Choose color' : 'Вибрати колір';
     }
 
-    return 'Вибрати смак';
+    return currentLang === 'en' ? 'Choose flavor' : 'Вибрати смак';
 }
 
 function getProductOptionCountText(group) {
     const category = group.items[0]?.category;
 
     if (normalizeCategory(category) === normalizeCategory('Картриджі')) {
-        return `${group.items.length} омів`;
+        return currentLang === 'en' ? `${group.items.length} ohms` : `${group.items.length} омів`;
     }
 
     if (normalizeCategory(category) === normalizeCategory('POD-Системи')) {
-        return `${group.items.length} кольорів`;
+        return currentLang === 'en' ? `${group.items.length} colors` : `${group.items.length} кольорів`;
     }
 
-    return `${group.items.length} смаків`;
+    return currentLang === 'en' ? `${group.items.length} flavors` : `${group.items.length} смаків`;
 }
 
 function getProductGroupKey(product) {
@@ -440,7 +625,7 @@ function renderProductGroupModal(group) {
             <button class="buy-btn detail-buy"
                 onclick="handleBuy(this, '${encodeClickValue(getProductId(selected))}')"
                 ${selected.stock <= 0 ? 'disabled style="opacity:0.5"' : ''}>
-                ${selected.stock > 0 ? 'Купити' : 'Немає'}
+                ${selected.stock > 0 ? t('buy') : t('unavailable')}
             </button>
         </div>
     `;
@@ -474,7 +659,7 @@ function addToCart(id) {
     const currentQty = cart[itemId]?.qty || 0;
 
     if (Number(currentQty) >= Number(product.stock)) {
-        alert('Більше немає в наявності');
+        alert(t('outOfStock'));
         return;
     }
 
@@ -504,7 +689,7 @@ function changeQty(id, delta) {
     if (newQty < 1) return;
 
     if (newQty > product.stock) {
-        alert('Досягнуто максимальну кількість товару на складі');
+        alert(t('maxStock'));
         return;
     }
 
@@ -525,8 +710,8 @@ function updateFooter() {
     }
 
     const text = totalItems > 0
-        ? `Кошик (${totalItems}) — ${totalPrice} ₴`
-        : 'Кошик порожній';
+        ? `${t('cart')} (${totalItems}) — ${totalPrice} ₴`
+        : t('cartEmpty');
 
     const mainBtn = document.getElementById('cart-footer');
     if (mainBtn) mainBtn.innerText = text;
@@ -586,8 +771,8 @@ function renderCart() {
         `;
     }
 
-    list.innerHTML = html || '<p style="text-align:center; color:#888;">Кошик порожній</p>';
-    document.getElementById('cart-total').innerText = `Разом: ${total} ₴`;
+    list.innerHTML = html || `<p style="text-align:center; color:#888;">${t('cartEmpty')}</p>`;
+    document.getElementById('cart-total').innerText = `${t('total')}: ${total} ₴`;
 }
 
 
@@ -631,7 +816,7 @@ function openFavorites() {
     const cartContainer = document.getElementById('fav-cart-container');
 
     if (!favProducts.length) {
-        grid.innerHTML = '<p style="grid-column:1/3; text-align:center; color:#888;">Тут поки порожньо</p>';
+        grid.innerHTML = `<p style="grid-column:1/3; text-align:center; color:#888;">${t('emptyFavorites')}</p>`;
         if (cartContainer) cartContainer.style.display = 'none';
         return;
     }
@@ -707,7 +892,7 @@ function setCheckoutSubmitting(submitting) {
     if (submitBtn) {
         submitBtn.disabled = submitting;
         submitBtn.style.opacity = submitting ? '0.6' : '';
-        submitBtn.textContent = submitting ? 'ВІДПРАВЛЯЄМО...' : 'ПІДТВЕРДИТИ';
+        submitBtn.textContent = submitting ? t('sending') : t('confirm');
     }
 
     const mainBtn = getTelegramMainButton();
@@ -779,7 +964,7 @@ function bindCheckoutErrorClear() {
 // ================= CHECKOUT & ORDER SUBMISSION =================
 
 function openCheckout() {
-    if (!Object.keys(cart).length) return alert('Кошик порожній!');
+    if (!Object.keys(cart).length) return alert(t('cartEmpty'));
     document.getElementById('checkout-screen').style.display = 'block';
     toggleDeliveryFields();
     isSubmittingOrder = false;
@@ -788,7 +973,7 @@ function openCheckout() {
 
     const mainBtn = getTelegramMainButton();
     if (mainBtn) {
-        mainBtn.setText("ПІДТВЕРДИТИ ЗАМОВЛЕННЯ");
+        mainBtn.setText(t('confirmOrder'));
         mainBtn.offClick(submitOrder);
         mainBtn.onClick(submitOrder);
     }
@@ -818,15 +1003,15 @@ async function submitOrder() {
     }
 
     if (!name || !/^\d{9}$/.test(cleanPhone)) {
-        return showCheckoutError('Перевірте контактні дані! Номер повинен містити 9 цифр (наприклад: 931234567)', !name ? 'order-name' : 'order-phone');
+        return showCheckoutError(t('checkContacts'), !name ? 'order-name' : 'order-phone');
     }
 
     if (delivery === 'nova_poshta' && (!city || !warehouse)) {
-        return showCheckoutError('Вкажіть місто та відділення Нової Пошти!', !city ? 'order-city' : 'order-warehouse');
+        return showCheckoutError(t('fillDelivery'), !city ? 'order-city' : 'order-warehouse');
     }
 
     const items = Object.values(cart);
-    if (!items.length) return showCheckoutError('Кошик порожній!');
+    if (!items.length) return showCheckoutError(t('cartEmpty'));
     hideCheckoutError();
 
     const total = items.reduce((s, i) => s + i.price * i.qty, 0);
@@ -886,7 +1071,7 @@ async function submitOrder() {
             orderError.code ? `Код: ${orderError.code}` : '',
         ].filter(Boolean).join('\n');
 
-        return showCheckoutError(`Помилка збереження замовлення!\n${errorText}`);
+        return showCheckoutError(`${t('saveOrderError')}\n${errorText}`);
     }
 
     if (window.Telegram?.WebApp) {
@@ -910,6 +1095,7 @@ async function submitOrder() {
 // ================= START =================
 
 loadCart();
+applyTranslations();
 load();
 bindCheckoutErrorClear();
 
@@ -1005,7 +1191,7 @@ function renderProductGroupCard(group) {
 
             <div class="info">
                 ${renderStock(inStock)}
-                <div class="price">від ${minPrice} ₴</div>
+                <div class="price">${currentLang === 'en' ? 'from' : 'від'} ${minPrice} ₴</div>
                 <div class="name">${escapeHtml(group.name)}</div>
                 <div class="flavor-count">${escapeHtml(flavorText)}</div>
                 <button class="buy-btn" onclick="event.stopPropagation(); openProductGroupEncoded('${encodeClickValue(group.key)}')">
@@ -1039,7 +1225,7 @@ function renderProductCard(p, { isFavorite = false } = {}) {
                 <button class="buy-btn"
                     onclick="handleBuy(this, '${encodeClickValue(getProductId(p))}')"
                     ${p.stock <= 0 ? 'disabled style="opacity:0.5"' : ''}>
-                    ${p.stock > 0 ? 'Купити' : 'Немає'}
+                    ${p.stock > 0 ? t('buy') : t('unavailable')}
                 </button>
             </div>
         </div>
@@ -1052,8 +1238,8 @@ function renderStock(stock) {
     return `
         <div class="stock ${stock > 0 ? 'in' : 'out'}">
             ${stock > 0
-                ? 'В наявності'
-                : 'Немає в наявності'}
+                ? t('inStock')
+                : t('outOfStock')}
         </div>
     `;
 }

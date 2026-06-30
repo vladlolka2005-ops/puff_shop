@@ -375,6 +375,41 @@ select.input-field {
     background: #344656;
 }
 
+.profile-language {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--tg-card);
+    padding: 12px 15px;
+    border: 1px solid #455a64;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.language-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    min-width: 126px;
+}
+
+.language-toggle button {
+    border: 1px solid #455a64;
+    border-radius: 8px;
+    background: #18232c;
+    color: #b2bcc4;
+    padding: 8px 10px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.language-toggle button.active {
+    border-color: var(--tg-blue);
+    background: var(--tg-blue);
+    color: white;
+}
+
 .manager-btn-wrapper {
     margin-top: 20px;
     padding: 0 10px;
