@@ -22,6 +22,7 @@ const statusClasses = {
 };
 
 let orders = [];
+let botMessages = [];
 let isLoading = false;
 
 
@@ -136,8 +137,27 @@ async function loadOrders() {
     }
 
     orders = data || [];
+    await loadBotMessages();
     setLastUpdated();
     renderOrders();
+}
+
+async function loadBotMessages() {
+    const client = getSupabaseClient();
+    if (!client) return;
+
+    const { data, error } = await client
+        .from('bot_messages')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.warn('Bot messages loading error:', error);
+        botMessages = [];
+        return;
+    }
+
+    botMessages = data || [];
 }
 
 async function updateOrderStatus(orderId, newStatus, button) {
@@ -244,7 +264,31 @@ async function sendCustomerMessage(button) {
     }
 
     textarea.value = '';
+    await saveOutgoingBotMessage(order, message);
+    await loadBotMessages();
+    renderOrders();
     alert('Повідомлення покупцю відправлено');
+}
+
+async function saveOutgoingBotMessage(order, text) {
+    const client = getSupabaseClient();
+    if (!client || !order?.telegram_id) return;
+
+    const { error } = await client
+        .from('bot_messages')
+        .insert([{
+            telegram_id: order.telegram_id,
+            username: order.telegram ? String(order.telegram).replace('@', '') : null,
+            first_name: order.customer_name || null,
+            text,
+            order_id: order.id,
+            direction: 'outgoing',
+            is_read: true,
+        }]);
+
+    if (error) {
+        console.warn('Outgoing message save error:', error);
+    }
 }
 
 
@@ -301,6 +345,7 @@ function renderOrderCard(order) {
     const telegramLink = order.telegram
         ? `https://t.me/${String(order.telegram).replace('@', '')}`
         : '';
+    const chatHtml = renderOrderChat(order);
 
     const itemsHtml = items.map(item => `
         <div class="admin-item">
@@ -337,6 +382,7 @@ function renderOrderCard(order) {
                         ? `<a class="admin-contact-link" href="${escapeHtml(telegramLink)}" target="_blank" rel="noopener noreferrer">Відкрити Telegram</a>`
                         : '<span class="admin-muted">Telegram username не вказано</span>'}
                 </div>
+                ${chatHtml}
                 <textarea class="input-field comment-field admin-message-input" placeholder="Повідомлення покупцю"></textarea>
                 <button class="admin-send-btn" data-order-id="${escapeHtml(order.id)}" onclick="sendCustomerMessage(this)">Відправити</button>
             </div>
@@ -362,6 +408,41 @@ function renderOrderCard(order) {
                 <button class="admin-save-btn" data-order-id="${escapeHtml(order.id)}" onclick="saveStatus(this)">Зберегти</button>
             </div>
         </article>
+    `;
+}
+
+function getOrderMessages(order) {
+    const orderId = String(order.id);
+    const telegramId = String(order.telegram_id || '');
+
+    return botMessages.filter(message => {
+        const sameOrder = message.order_id && String(message.order_id) === orderId;
+        const sameCustomer = !message.order_id && telegramId && String(message.telegram_id) === telegramId;
+        return sameOrder || sameCustomer;
+    });
+}
+
+function renderOrderChat(order) {
+    const messages = getOrderMessages(order);
+    if (!messages.length) {
+        return '<div class="admin-chat-empty">Повідомлень від покупця ще немає</div>';
+    }
+
+    return `
+        <div class="admin-chat">
+            ${messages.map(message => {
+                const direction = message.direction === 'outgoing' ? 'outgoing' : 'incoming';
+                const label = direction === 'outgoing' ? 'Ви' : 'Покупець';
+                const date = message.created_at ? new Date(message.created_at).toLocaleString() : '';
+
+                return `
+                    <div class="admin-chat-message ${direction}">
+                        <div class="admin-chat-meta">${escapeHtml(label)} · ${escapeHtml(date)}</div>
+                        <div class="admin-chat-text">${escapeHtml(message.text || '')}</div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
     `;
 }
 

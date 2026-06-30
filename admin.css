@@ -210,6 +210,51 @@
     margin-bottom: 8px;
 }
 
+.admin-chat {
+    display: grid;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 0 0 10px;
+    padding: 8px;
+    border: 1px solid #455a64;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.admin-chat-empty {
+    color: #7f8d99;
+    font-size: 13px;
+    margin: 0 0 10px;
+}
+
+.admin-chat-message {
+    width: fit-content;
+    max-width: 88%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #20313d;
+}
+
+.admin-chat-message.outgoing {
+    justify-self: end;
+    background: #1f5f38;
+}
+
+.admin-chat-meta {
+    color: #b2bcc4;
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+.admin-chat-text {
+    color: white;
+    font-size: 14px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
 .admin-send-btn {
     width: 100%;
     background: var(--tg-green);
