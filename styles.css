@@ -449,6 +449,62 @@ select.input-field {
     text-decoration: none;
 }
 
+.faq-list {
+    display: grid;
+    gap: 10px;
+}
+
+.faq-item {
+    background: var(--tg-card);
+    border: 1px solid #455a64;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.faq-item b {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.faq-item p {
+    color: #b2bcc4;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.age-modal {
+    z-index: 12000;
+}
+
+.age-content {
+    max-width: 420px;
+    margin: 70px auto 0;
+    text-align: center;
+}
+
+.age-content p {
+    color: #b2bcc4;
+    line-height: 1.45;
+}
+
+.age-exit-btn,
+.repeat-order-btn {
+    width: 100%;
+    border: 1px solid #455a64;
+    border-radius: 8px;
+    background: transparent;
+    color: #b2bcc4;
+    padding: 11px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.repeat-order-btn {
+    color: white;
+    border-color: var(--tg-blue);
+}
+
 
 /* ================== FAVORITES ================== */
 
@@ -693,6 +749,11 @@ select.input-field {
 .status-completed {
     background: rgba(49, 181, 69, 0.15);
     color: #31b545;
+}
+
+.status-shipped {
+    background: rgba(36, 139, 207, 0.18);
+    color: #6bbcff;
 }
 
 .status-rejected {

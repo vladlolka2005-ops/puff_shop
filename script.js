@@ -20,6 +20,7 @@ const I18N = {
         history: 'Історія',
         language: 'Мова',
         privacy: 'Політика конфіденційності',
+        faq: 'FAQ',
         manager: 'Написати менеджеру',
         appVersion: 'Версія додатку',
         liquid: 'Рідина',
@@ -65,6 +66,25 @@ const I18N = {
         fillDelivery: 'Вкажіть місто та відділення Нової Пошти!',
         saveOrderError: 'Помилка збереження замовлення!',
         privacyConsent: 'Оформлюючи замовлення, ви погоджуєтесь з <a href="privacy.html">Політикою конфіденційності</a>.',
+        ageTitle: 'Підтвердження віку',
+        ageText: 'Цей магазин призначений лише для користувачів, яким виповнилося 18 років.',
+        ageConfirm: 'Мені є 18 років',
+        ageExit: 'Вийти',
+        repeatOrder: 'Повторити замовлення',
+        addedToCart: 'Товари додано в кошик',
+        faqQ1: 'Як оформити замовлення?',
+        faqA1: 'Додайте товар у кошик, заповніть контакти та підтвердіть замовлення.',
+        faqQ2: 'Як відбувається доставка?',
+        faqA2: 'Ми відправляємо замовлення Новою Поштою після підтвердження менеджером.',
+        faqQ3: 'Як оплатити?',
+        faqA3: 'Доступна оплата карткою або готівкою згідно з умовами замовлення.',
+        faqQ4: "Як зв'язатися з магазином?",
+        faqA4: 'Напишіть боту або менеджеру в Telegram: @nnpuff.',
+        statusPending: 'В процесi',
+        statusConfirmed: 'Підтверджено',
+        statusShipped: 'Відправлено',
+        statusCompleted: 'Виконано',
+        statusRejected: 'Відхилено',
     },
     en: {
         profile: 'Profile',
@@ -74,6 +94,7 @@ const I18N = {
         history: 'History',
         language: 'Language',
         privacy: 'Privacy Policy',
+        faq: 'FAQ',
         manager: 'Message manager',
         appVersion: 'App version',
         liquid: 'Liquids',
@@ -119,6 +140,25 @@ const I18N = {
         fillDelivery: 'Enter city and Nova Poshta branch!',
         saveOrderError: 'Order saving error!',
         privacyConsent: 'By placing an order, you agree to the <a href="privacy.html">Privacy Policy</a>.',
+        ageTitle: 'Age confirmation',
+        ageText: 'This shop is intended only for users who are at least 18 years old.',
+        ageConfirm: 'I am 18 or older',
+        ageExit: 'Exit',
+        repeatOrder: 'Repeat order',
+        addedToCart: 'Items added to cart',
+        faqQ1: 'How do I place an order?',
+        faqA1: 'Add products to the cart, fill in your contact details, and confirm the order.',
+        faqQ2: 'How does delivery work?',
+        faqA2: 'We ship orders via Nova Poshta after manager confirmation.',
+        faqQ3: 'How can I pay?',
+        faqA3: 'Payment by card or cash is available according to the order terms.',
+        faqQ4: 'How do I contact the shop?',
+        faqA4: 'Message the bot or the manager on Telegram: @nnpuff.',
+        statusPending: 'Processing',
+        statusConfirmed: 'Confirmed',
+        statusShipped: 'Shipped',
+        statusCompleted: 'Completed',
+        statusRejected: 'Rejected',
     },
 };
 
@@ -155,6 +195,7 @@ function applyTranslations() {
     setText('profile-history-label', t('orderHistory'));
     setText('profile-language-label', t('language'));
     setText('profile-privacy-label', t('privacy'));
+    setText('profile-faq-label', t('faq'));
     setText('manager-link-label', t('manager'));
     setText('app-version-label', t('appVersion'));
     setText('favorites-title', t('favorites'));
@@ -172,6 +213,19 @@ function applyTranslations() {
     setText('comment-label', t('comment'));
     setText('checkout-submit-btn', t('confirm'));
     setText('privacy-consent', t('privacyConsent'));
+    setText('age-title', t('ageTitle'));
+    setText('age-text', t('ageText'));
+    setText('age-confirm-btn', t('ageConfirm'));
+    setText('age-exit-btn', t('ageExit'));
+    setText('faq-title', t('faq'));
+    setText('faq-q1', t('faqQ1'));
+    setText('faq-a1', t('faqA1'));
+    setText('faq-q2', t('faqQ2'));
+    setText('faq-a2', t('faqA2'));
+    setText('faq-q3', t('faqQ3'));
+    setText('faq-a3', t('faqA3'));
+    setText('faq-q4', t('faqQ4'));
+    setText('faq-a4', t('faqA4'));
     setText('success-title', t('successTitle'));
     setText('success-text', t('successText'));
     setText('success-return-btn', t('returnBack'));
@@ -882,11 +936,38 @@ function openHistory() {
     loadHistory();
 }
 
+function openFaq() {
+    document.getElementById('faq-screen').style.display = 'block';
+}
+
 function closeModal(id) {
     document.getElementById(id).style.display = 'none';
     if (id === 'checkout-screen') {
         resetCheckoutState();
     }
+}
+
+function showAgeGate() {
+    if (localStorage.getItem('puff_age_confirmed') === '1') return;
+    const modal = document.getElementById('age-screen');
+    if (modal) modal.style.display = 'block';
+}
+
+function confirmAge() {
+    localStorage.setItem('puff_age_confirmed', '1');
+    const modal = document.getElementById('age-screen');
+    if (modal) modal.style.display = 'none';
+}
+
+function denyAge() {
+    document.body.innerHTML = `
+        <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; text-align:center;">
+            <div>
+                <h2>${currentLang === 'en' ? 'Access denied' : 'Доступ обмежено'}</h2>
+                <p style="color:#b2bcc4;">${currentLang === 'en' ? 'The shop is available only for users aged 18 or older.' : 'Магазин доступний лише для користувачів віком від 18 років.'}</p>
+            </div>
+        </div>
+    `;
 }
 
 function getTelegramMainButton() {
@@ -1104,6 +1185,7 @@ loadCart();
 applyTranslations();
 load();
 bindCheckoutErrorClear();
+showAgeGate();
 
 if (window.Telegram?.WebApp) {
     window.Telegram.WebApp.ready();
@@ -1285,15 +1367,17 @@ function renderHistory(orders) {
     const container = document.getElementById('history-screen');
 
     const statusLabelMap = {
-        pending: 'В процесi',
-        confirmed: 'Підтверджено',
-        completed: 'Виконано',
-        rejected: 'Вiдхилено',
+        pending: t('statusPending'),
+        confirmed: t('statusConfirmed'),
+        shipped: t('statusShipped'),
+        completed: t('statusCompleted'),
+        rejected: t('statusRejected'),
     };
 
     const statusClassMap = {
         pending: 'status-pending',
         confirmed: 'status-confirmed',
+        shipped: 'status-shipped',
         completed: 'status-completed',
         rejected: 'status-rejected',
     };
@@ -1355,6 +1439,10 @@ function renderHistory(orders) {
                     ${itemsHtml}
                 </div>
 
+                <button class="repeat-order-btn" onclick='repeatOrder(${JSON.stringify(order.items || []).replaceAll("'", '&#039;')})'>
+                    ${t('repeatOrder')}
+                </button>
+
                 ${order.status === 'pending' ? `
                     <div style="margin-top:10px; text-align:right;">
                         <button class="cancel-btn" onclick="confirmCancelOrder('${order.id}')">
@@ -1373,12 +1461,56 @@ function renderHistory(orders) {
 
 function getStatusLabel(status) {
     switch (status) {
-        case 'pending':   return 'В процесi';
-        case 'confirmed': return 'Підтверджено';
-        case 'completed': return 'Виконано';
-        case 'rejected':  return 'Вiдхилено';
+        case 'pending':   return t('statusPending');
+        case 'confirmed': return t('statusConfirmed');
+        case 'shipped':   return t('statusShipped');
+        case 'completed': return t('statusCompleted');
+        case 'rejected':  return t('statusRejected');
         default:          return status;
     }
+}
+
+function findProductForOrderItem(item) {
+    const possibleIds = [
+        item.client_id,
+        item.source_table && item.source_id ? `${String(item.source_table).replace(/s$/, '')}-${item.source_id}` : '',
+        item.id,
+    ].filter(Boolean).map(String);
+
+    return productsData.find(product =>
+        possibleIds.includes(getProductId(product)) ||
+        possibleIds.includes(String(product.id)) ||
+        normalizeText(product.name).toLowerCase() === normalizeText(item.name).toLowerCase()
+    );
+}
+
+function repeatOrder(items) {
+    let added = 0;
+
+    (items || []).forEach(item => {
+        const product = findProductForOrderItem(item);
+        if (!product || Number(product.stock) <= 0) return;
+
+        const itemId = getProductId(product);
+        const qty = Math.max(1, Number(item.qty || item.quantity || 1));
+        const currentQty = Number(cart[itemId]?.qty || 0);
+        const nextQty = Math.min(Number(product.stock), currentQty + qty);
+
+        if (nextQty <= currentQty) return;
+        cart[itemId] = { ...product, qty: nextQty };
+        added++;
+    });
+
+    if (!added) {
+        alert(t('outOfStock'));
+        return;
+    }
+
+    saveCart();
+    updateFooter();
+    closeModal('history-screen');
+    openCart();
+    alert(t('addedToCart'));
 }
 
 

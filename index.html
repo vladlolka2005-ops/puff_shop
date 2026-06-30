@@ -21,10 +21,10 @@
     <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 
     <!-- Основний скрипт -->
-  <script src="script.js?v=15" defer></script>
+  <script src="script.js?v=17" defer></script>
 
     <!-- Стилі -->
-    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 
@@ -49,6 +49,11 @@
 
             <div class="profile-menu-item" onclick="openHistory()">
                 <div><span>📦</span> <span id="profile-history-label">Історія замовлень</span></div>
+                <span style="color: #b2bcc4;">›</span>
+            </div>
+
+            <div class="profile-menu-item" onclick="openFaq()">
+                <div><span>❔</span> <span id="profile-faq-label">FAQ</span></div>
                 <span style="color: #b2bcc4;">›</span>
             </div>
 
@@ -103,6 +108,43 @@
                 <button class="back-btn" onclick="closeModal('history-screen')">‹</button>
                 <span id="history-title">Історія</span>
             </div>
+        </div>
+    </div>
+
+    <div id="faq-screen" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="back-btn" onclick="closeModal('faq-screen')">‹</button>
+                <span id="faq-title">FAQ</span>
+            </div>
+
+            <div class="faq-list">
+                <div class="faq-item">
+                    <b id="faq-q1">Як оформити замовлення?</b>
+                    <p id="faq-a1">Додайте товар у кошик, заповніть контакти та підтвердіть замовлення.</p>
+                </div>
+                <div class="faq-item">
+                    <b id="faq-q2">Як відбувається доставка?</b>
+                    <p id="faq-a2">Ми відправляємо замовлення Новою Поштою після підтвердження менеджером.</p>
+                </div>
+                <div class="faq-item">
+                    <b id="faq-q3">Як оплатити?</b>
+                    <p id="faq-a3">Доступна оплата карткою або готівкою згідно з умовами замовлення.</p>
+                </div>
+                <div class="faq-item">
+                    <b id="faq-q4">Як зв'язатися з магазином?</b>
+                    <p id="faq-a4">Напишіть боту або менеджеру в Telegram: @nnpuff.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="age-screen" class="modal age-modal" style="display: none;">
+        <div class="modal-content age-content">
+            <h2 id="age-title">Підтвердження віку</h2>
+            <p id="age-text">Цей магазин призначений лише для користувачів, яким виповнилося 18 років.</p>
+            <button class="main-btn" id="age-confirm-btn" onclick="confirmAge()">Мені є 18 років</button>
+            <button class="age-exit-btn" id="age-exit-btn" onclick="denyAge()">Вийти</button>
         </div>
     </div>
 

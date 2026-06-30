@@ -1,6 +1,7 @@
 const STATUS_LABELS = {
     pending: 'В процесi',
     confirmed: 'Підтверджено',
+    shipped: 'Відправлено',
     completed: 'Виконано',
     rejected: 'Вiдхилено',
 };
@@ -8,6 +9,7 @@ const STATUS_LABELS = {
 const STATUS_MESSAGES = {
     pending: 'Ваше замовлення знову в обробці.',
     confirmed: 'Ваше замовлення підтверджено.',
+    shipped: 'Ваше замовлення відправлено.',
     completed: 'Ваше замовлення виконано.',
     rejected: 'Ваше замовлення відхилено.',
 };

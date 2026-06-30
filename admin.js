@@ -10,6 +10,7 @@ let supabaseClient = null;
 const statusLabels = {
     pending: 'В процесi',
     confirmed: 'Підтверджено',
+    shipped: 'Відправлено',
     completed: 'Виконано',
     rejected: 'Вiдхилено',
 };
@@ -17,6 +18,7 @@ const statusLabels = {
 const statusClasses = {
     pending: 'status-pending',
     confirmed: 'status-confirmed',
+    shipped: 'status-shipped',
     completed: 'status-completed',
     rejected: 'status-rejected',
 };
@@ -33,6 +35,7 @@ function normalizeStatus(status) {
 
     if (value === 'В процесi') return 'pending';
     if (value === 'Підтверджено') return 'confirmed';
+    if (value === 'Відправлено') return 'shipped';
     if (value === 'Виконано') return 'completed';
     if (value === 'Вiдхилено') return 'rejected';
 
