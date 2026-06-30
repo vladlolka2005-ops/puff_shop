@@ -378,7 +378,7 @@ async function load() {
         source_id: pod.id,
     }));
 
-    productsData = [...normalizedProducts, ...normalizedLiquids, ...normalizedCartridges, ...normalizedPods];
+    productsData = inheritGroupImages([...normalizedProducts, ...normalizedLiquids, ...normalizedCartridges, ...normalizedPods]);
     validateCart();
     render();
 }
@@ -392,6 +392,13 @@ function normalizeText(value) {
 
 function normalizeCategory(value) {
     return normalizeText(value).toLowerCase();
+}
+
+function isPodProduct(product) {
+    return product?.source_table === 'pods' ||
+        (CATEGORY_VALUES.pods || []).some(category =>
+            normalizeCategory(category) === normalizeCategory(product?.category)
+        );
 }
 
 function productMatchesCategory(product) {
@@ -484,6 +491,27 @@ function getGroupImageProduct(group) {
         selected;
 }
 
+function inheritGroupImages(items) {
+    const imagesByGroup = {};
+
+    items.forEach(item => {
+        const imageUrl = getProductImage(item);
+        if (!imageUrl) return;
+
+        const groupKey = getProductGroupKey(item);
+        if (!imagesByGroup[groupKey]) {
+            imagesByGroup[groupKey] = imageUrl;
+        }
+    });
+
+    return items.map(item => {
+        if (getProductImage(item)) return item;
+
+        const groupImage = imagesByGroup[getProductGroupKey(item)];
+        return groupImage ? { ...item, image_url: groupImage } : item;
+    });
+}
+
 function encodeClickValue(value) {
     return encodeURIComponent(String(value ?? ''));
 }
@@ -518,6 +546,21 @@ function getProductGroupName(product) {
     if (explicitGroup) return explicitGroup;
 
     const name = normalizeText(product.name);
+    const color = normalizeText(
+        product.color ||
+        product.colour ||
+        product.pod_color
+    );
+
+    if (isPodProduct(product) && color && name.toLowerCase().endsWith(color.toLowerCase())) {
+        const baseName = normalizeText(
+            name.slice(0, name.length - color.length)
+                .replace(/[-|:]+$/g, '')
+                .trim()
+        );
+
+        if (baseName) return baseName;
+    }
     const separators = [' - ', ' — ', ' – ', ' | '];
     const separator = separators.find(item => name.includes(item));
 
