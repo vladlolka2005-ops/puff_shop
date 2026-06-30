@@ -60,6 +60,7 @@ const I18N = {
         ohms: 'Оми',
         colors: 'Кольори',
         emptyFavorites: 'Тут поки порожньо',
+        emptyCatalog: 'Тут поки немає товарів',
         noOrders: 'Замовлень ще немає',
         maxStock: 'Досягнуто максимальну кількість товару на складі',
         checkContacts: 'Перевірте контактні дані! Номер повинен містити 9 цифр (наприклад: 931234567)',
@@ -134,6 +135,7 @@ const I18N = {
         ohms: 'Ohms',
         colors: 'Colors',
         emptyFavorites: 'Nothing here yet',
+        emptyCatalog: 'No products here yet',
         noOrders: 'No orders yet',
         maxStock: 'Maximum stock quantity reached',
         checkContacts: 'Check contact details! The number must contain 9 digits, for example: 931234567',
@@ -265,6 +267,21 @@ function setLanguage(lang) {
     applyTranslations();
 }
 
+function renderEmptyState(icon, text) {
+    return `
+        <div class="empty-state">
+            <div class="empty-state-icon">${icon}</div>
+            <div>${escapeHtml(text)}</div>
+        </div>
+    `;
+}
+
+function renderSkeletons(count = 6) {
+    const grid = document.getElementById('products-grid');
+    if (!grid) return;
+    grid.innerHTML = Array.from({ length: count }, () => '<div class="skeleton-card"></div>').join('');
+}
+
 
 // ================= CART STORAGE =================
 
@@ -299,6 +316,8 @@ function removeFromCart(id) {
 // ================= LOAD =================
 
 async function load() {
+    renderSkeletons();
+
     const [
         { data: products, error: productsError },
         { data: liquids, error: liquidsError },
@@ -703,7 +722,9 @@ function render() {
     let filtered = productsData.filter(productMatchesCategory);
     const groups = getProductGroups(sortProductsList(filtered));
 
-    grid.innerHTML = groups.map(group => renderProductGroupCard(group)).join('');
+    grid.innerHTML = groups.length
+        ? groups.map(group => renderProductGroupCard(group)).join('')
+        : renderEmptyState('⌁', t('emptyCatalog'));
 
     updateFooter();
 }
@@ -876,7 +897,7 @@ function openFavorites() {
     const cartContainer = document.getElementById('fav-cart-container');
 
     if (!favProducts.length) {
-        grid.innerHTML = `<p style="grid-column:1/3; text-align:center; color:#888;">${t('emptyFavorites')}</p>`;
+        grid.innerHTML = renderEmptyState('♡', t('emptyFavorites'));
         if (cartContainer) cartContainer.style.display = 'none';
         return;
     }

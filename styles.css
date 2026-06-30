@@ -1,10 +1,12 @@
  /* ================== ROOT ================== */
 
 :root {
-    --tg-bg: #1c2732;
-    --tg-card: #2b3945;
+    --tg-bg: #121a22;
+    --tg-card: #22303c;
     --tg-blue: #3390ec;
     --tg-green: #31b545;
+    --tg-border: #3e5262;
+    --tg-soft: #b2bcc4;
 }
 
 
@@ -15,7 +17,9 @@
 }
 
 body {
-    background-color: var(--tg-bg);
+    background:
+        radial-gradient(circle at top left, rgba(51, 144, 236, 0.12), transparent 34%),
+        linear-gradient(180deg, #121a22 0%, #17232d 100%);
     color: white;
     font-family: sans-serif;
     margin: 0;
@@ -105,19 +109,28 @@ select.input-field {
 /* ================== CARD ================== */
 
 .card {
-    background: var(--tg-card);
+    background: linear-gradient(180deg, #273744 0%, #202d38 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 12px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     position: relative;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+    animation: cardIn 0.22s ease both;
+    transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.card:active {
+    transform: scale(0.98);
+    border-color: rgba(51, 144, 236, 0.45);
 }
 
 
 /* ================== IMAGE ================== */
 
 .img-wrap {
-    background: black;
+    background: #0d1319;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -129,6 +142,11 @@ select.input-field {
     max-width: 98%;
     max-height: 98%;
     object-fit: contain;
+    transition: transform 0.22s ease;
+}
+
+.card:active .img-wrap img {
+    transform: scale(1.03);
 }
 
 
@@ -183,7 +201,7 @@ select.input-field {
 
 .buy-btn {
     width: 100%;
-    background: var(--tg-blue);
+    background: linear-gradient(135deg, #3390ec, #2577c7);
     color: white;
     border: none;
     padding: 8px;
@@ -199,7 +217,7 @@ select.input-field {
 
 .main-btn {
     width: 100%;
-    background: var(--tg-green);
+    background: linear-gradient(135deg, #31b545, #28a53b);
     color: white;
     border: none;
     padding: 14px;
@@ -237,10 +255,17 @@ select.input-field {
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 15px;
-    background: var(--tg-bg);
-    border-top: 1px solid var(--tg-card);
+    padding: 10px 14px 14px;
+    background: rgba(18, 26, 34, 0.9);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
     z-index: 10;
+}
+
+#cart-footer,
+#fav-cart-footer {
+    min-height: 52px;
+    box-shadow: 0 10px 24px rgba(49, 181, 69, 0.28);
 }
 
 #fav-cart-container {
@@ -292,6 +317,57 @@ select.input-field {
     display: none;
     background: rgba(0, 0, 0, 0.9);
     z-index: 10000;
+}
+
+.skeleton-card {
+    min-height: 230px;
+    background: linear-gradient(90deg, #22303c 0%, #2d3d4b 45%, #22303c 100%);
+    background-size: 220% 100%;
+    border-radius: 12px;
+    animation: skeletonMove 1.15s ease-in-out infinite;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    min-height: 210px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    color: var(--tg-soft);
+    background: rgba(34, 48, 60, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.empty-state-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(51, 144, 236, 0.14);
+    color: var(--tg-blue);
+    font-size: 24px;
+}
+
+@keyframes skeletonMove {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+@keyframes cardIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 
