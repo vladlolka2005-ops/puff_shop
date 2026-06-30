@@ -420,12 +420,13 @@ function normalizeImageUrl(value) {
     const url = normalizeText(value);
     if (!url) return '';
 
-    if (/^https?:\/\//i.test(url) || /^data:image\//i.test(url)) return url;
-    if (url.startsWith('//')) return `https:${url}`;
-    if (url.startsWith('/storage/v1/')) return `${S_URL}${url}`;
-    if (url.startsWith('storage/v1/')) return `${S_URL}/${url}`;
+    if (/^data:image\//i.test(url)) return url;
+    if (/^https?:\/\//i.test(url)) return encodeURI(url);
+    if (url.startsWith('//')) return encodeURI(`https:${url}`);
+    if (url.startsWith('/storage/v1/')) return encodeURI(`${S_URL}${url}`);
+    if (url.startsWith('storage/v1/')) return encodeURI(`${S_URL}/${url}`);
 
-    return url;
+    return encodeURI(url);
 }
 
 function getProductImage(product) {
@@ -471,6 +472,15 @@ function renderProductImage(product, attrs = '') {
     }
 
     return `<img src="${escapeAttr(imageUrl)}" ${attrs} onerror="handleImageError(this)">`;
+}
+
+function getGroupImageProduct(group) {
+    const selected = getSelectedVariant(group);
+    if (getProductImage(selected)) return selected;
+
+    return group.items.find(item => Number(item.stock) > 0 && getProductImage(item)) ||
+        group.items.find(item => getProductImage(item)) ||
+        selected;
 }
 
 function encodeClickValue(value) {
@@ -713,7 +723,8 @@ function renderProductGroupModal(group) {
     }
 
     const selected = getSelectedVariant(group);
-    const selectedImage = getProductImage(selected);
+    const imageProduct = getGroupImageProduct(group);
+    const selectedImage = getProductImage(selected) || getProductImage(imageProduct);
     const isFav = favorites.includes(getProductId(selected));
     const flavorButtons = group.items.map(item => {
         const flavor = getProductOption(item, group.name);
@@ -742,7 +753,7 @@ function renderProductGroupModal(group) {
 
             <div class="detail-image-wrap">
                 ${renderProductImage(
-                    selected,
+                    selectedImage ? { image_url: selectedImage } : selected,
                     selectedImage
                         ? `onclick="openImageModal('${escapeAttr(selectedImage)}')" style="cursor:pointer;"`
                         : ''
@@ -1346,6 +1357,7 @@ function handleBuy(btn, id) {
 
 function renderProductGroupCard(group) {
     const selected = getSelectedVariant(group);
+    const imageProduct = getGroupImageProduct(group);
     const inStock = group.items.reduce((sum, item) => sum + Number(item.stock || 0), 0);
     const prices = group.items.map(item => Number(item.price || 0)).filter(price => price > 0);
     const minPrice = prices.length ? Math.min(...prices) : Number(selected.price || 0);
@@ -1362,7 +1374,7 @@ function renderProductGroupCard(group) {
             </button>
 
             <div class="img-wrap">
-                ${renderProductImage(selected, 'style="cursor:pointer;"')}
+                ${renderProductImage(imageProduct, 'style="cursor:pointer;"')}
             </div>
 
             <div class="info">
