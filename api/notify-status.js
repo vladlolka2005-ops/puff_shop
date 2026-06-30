@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
         return;
     }
 
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const botToken = String(process.env.TELEGRAM_BOT_TOKEN || '').trim().replace(/^bot/i, '');
     const adminPin = process.env.ADMIN_PIN || '2580';
 
     if (!botToken) {
@@ -78,7 +78,8 @@ module.exports = async function handler(req, res) {
 
     if (!telegramResponse.ok || telegramResult?.ok === false) {
         res.status(502).json({
-            error: telegramResult?.description || 'Telegram API error',
+            error: telegramResult?.description || telegramResponse.statusText || 'Telegram API error',
+            telegram_status: telegramResponse.status,
         });
         return;
     }
