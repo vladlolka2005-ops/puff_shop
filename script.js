@@ -736,15 +736,43 @@ function resetCheckoutState() {
 function showCheckoutError(message, inputId) {
     isSubmittingOrder = false;
     setCheckoutSubmitting(false);
-    alert(message);
+
+    const errorBox = document.getElementById('checkout-error');
+    if (errorBox) {
+        errorBox.textContent = message;
+        errorBox.style.display = 'block';
+        try {
+            errorBox.scrollIntoView({ block: 'nearest' });
+        } catch {
+            errorBox.scrollIntoView();
+        }
+    }
 
     setTimeout(() => {
         const input = document.getElementById(inputId);
         if (input) {
-            input.focus();
-            if (typeof input.select === 'function') input.select();
+            try {
+                input.focus({ preventScroll: true });
+            } catch {
+                input.focus();
+            }
         }
     }, 100);
+}
+
+function hideCheckoutError() {
+    const errorBox = document.getElementById('checkout-error');
+    if (errorBox) {
+        errorBox.textContent = '';
+        errorBox.style.display = 'none';
+    }
+}
+
+function bindCheckoutErrorClear() {
+    ['order-name', 'order-phone', 'order-city', 'order-warehouse', 'order-comment'].forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.addEventListener('input', hideCheckoutError);
+    });
 }
 
 
@@ -756,6 +784,7 @@ function openCheckout() {
     toggleDeliveryFields();
     isSubmittingOrder = false;
     setCheckoutSubmitting(false);
+    hideCheckoutError();
 
     const mainBtn = getTelegramMainButton();
     if (mainBtn) {
@@ -798,6 +827,7 @@ async function submitOrder() {
 
     const items = Object.values(cart);
     if (!items.length) return showCheckoutError('Кошик порожній!');
+    hideCheckoutError();
 
     const total = items.reduce((s, i) => s + i.price * i.qty, 0);
 
@@ -853,8 +883,7 @@ async function submitOrder() {
             orderError.code ? `Код: ${orderError.code}` : '',
         ].filter(Boolean).join('\n');
 
-        alert(`Помилка збереження замовлення!\n${errorText}`);
-        return;
+        return showCheckoutError(`Помилка збереження замовлення!\n${errorText}`);
     }
 
     if (window.Telegram?.WebApp) {
@@ -879,6 +908,7 @@ async function submitOrder() {
 
 loadCart();
 load();
+bindCheckoutErrorClear();
 
 if (window.Telegram?.WebApp) {
     window.Telegram.WebApp.ready();

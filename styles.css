@@ -304,6 +304,17 @@ select.input-field {
     display: block;
 }
 
+.checkout-error {
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border: 1px solid #ff6b6b;
+    border-radius: 8px;
+    background: rgba(255, 107, 107, 0.12);
+    color: #ffd6d6;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
 
 /* ================== INPUT GROUP ================== */
 

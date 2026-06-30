@@ -21,10 +21,10 @@
     <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 
     <!-- Основний скрипт -->
-  <script src="script.js?v=11" defer></script>
+  <script src="script.js?v=12" defer></script>
 
     <!-- Стилі -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
 
@@ -145,6 +145,8 @@
                 <button class="back-btn" onclick="closeModal('checkout-screen')">‹</button>
                 Оформлення
             </div>
+
+            <div id="checkout-error" class="checkout-error" style="display: none;"></div>
 
             <div class="label">👤 КОНТАКТНІ ДАНІ:</div>
             <div class="input-group">
