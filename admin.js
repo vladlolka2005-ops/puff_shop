@@ -3,6 +3,7 @@
 const S_URL = 'https://bsiavngtycpetiiikmxd.supabase.co';
 const S_KEY = 'sb_publishable_5WlTFr_cduyplbY4BS2w2w_cevKpWmW';
 const ADMIN_PIN = '2580';
+const ADMIN_VERSION = 'admin-status-simple-v10';
 
 let supabaseClient = null;
 
@@ -159,7 +160,7 @@ async function updateOrderStatus(orderId, newStatus, button) {
 
     if (error) {
         console.error(error);
-        alert(`Не вдалося змінити статус:\n${error.message}`);
+        alert(`Не вдалося змінити статус (${ADMIN_VERSION}):\n${error.message}`);
         return;
     }
 
